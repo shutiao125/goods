@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卖家后台 - 编辑商品</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 5px 15px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* 表单容器 */
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .form-body {
+            padding: 35px 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: #dc3545;
+            margin-left: 3px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        /* 当前图片显示区 */
+        .current-image-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .current-image-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .current-image-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .current-image {
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 10px;
+            border: 3px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 文件上传 */
+        .file-upload-wrapper {
+            position: relative;
+            border: 2px dashed #ced4da;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .file-upload-wrapper:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .image-preview {
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .remove-image-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 18px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .remove-image-btn:hover {
+            background: #c82333;
+        }
+
+        .checkbox-wrapper {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            font-size: 14px;
+            color: #dc3545;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .form-footer {
+            padding: 25px 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #6c757d;
+            border: 2px solid #ced4da;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .form-body {
+                padding: 25px 20px;
+            }
+            .form-footer {
+                padding: 20px;
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🏪 卖家中心</div>
+                <div class="user-info" th:text="${currentUser != null ? currentUser.username : '卖家'}">卖家账号</div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/seller/dashboard" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>仪表盘</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/seller/goods" class="nav-link active">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/seller/goods/publish" class="nav-link">
+                        <span class="nav-icon">➕</span>
+                        <span>发布商品</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/seller/orders" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>返回前台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="nav-link">
+                        <span class="nav-icon">🚪</span>
+                        <span>退出登录</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">✏️ 编辑商品</h1>
+            </div>
+
+            <!-- 编辑表单 -->
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>✏️ 修改商品信息</h2>
+                    <p th:text="'正在编辑：' + (${goods != null and goods.name != null} ? ${goods.name} : '')">商品名称</p>
+                </div>
+
+                <form id="editForm" enctype="multipart/form-data" onsubmit="submitForm(event)">
+                    <div class="form-body">
+                        <!-- 隐藏字段：商品ID -->
+                        <input type="hidden" name="id" th:value="${goods != null ? goods.id : ''}">
+
+                        <div class="form-grid">
+                            <!-- 商品名称 -->
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    商品名称 <span class="required">*</span>
+                                </label>
+                                <input type="text"
+                                       name="name"
+                                       class="form-control"
+                                       required
+                                       th:value="${goods != null and goods.name != null} ? ${goods.name} : ''"
+                                       placeholder="请输入商品名称（最多100字）"
+                                       maxlength="100">
+                            </div>
+
+                            <!-- 商品描述 -->
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    商品描述 <span class="required">*</span>
+                                </label>
+                                <textarea name="description"
+                                          class="form-control"
+                                          required
+                                          rows="5"
+                                          th:text="${goods != null and goods.description != null} ? ${goods.description} : ''"
+                                          placeholder="请详细描述商品的特点、规格、使用方法等..."
+                                          maxlength="2000"></textarea>
+                            </div>
+
+                            <!-- 销售价格 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    销售价格 <span class="required">*</span>
+                                </label>
+                                <input type="number"
+                                       name="price"
+                                       class="form-control"
+                                       required
+                                       min="0.01"
+                                       step="0.01"
+                                       th:value="${goods != null and goods.price != null} ? ${goods.price} : ''"
+                                       placeholder="0.00">
+                            </div>
+
+                            <!-- 原价 -->
+                            <div class="form-group">
+                                <label class="form-label">原价 / 市场价</label>
+                                <input type="number"
+                                       name="originalPrice"
+                                       class="form-control"
+                                       min="0"
+                                       step="0.01"
+                                       th:value="${goods != null and goods.originalPrice != null} ? ${goods.originalPrice} : ''"
+                                       placeholder="0.00">
+                            </div>
+
+                            <!-- 库存数量 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    库存数量 <span class="required">*</span>
+                                </label>
+                                <input type="number"
+                                       name="stock"
+                                       class="form-control"
+                                       required
+                                       min="0"
+                                       th:value="${goods != null and goods.stock != null} ? ${goods.stock} : ''"
+                                       placeholder="0">
+                            </div>
+
+                            <!-- 商品状态 -->
+                            <div class="form-group">
+                                <label class="form-label">商品状态</label>
+                                <select name="status" class="form-control">
+                                    <option value="1" th:selected="${goods != null and goods.status == 1}">✅ 上架中</option>
+                                    <option value="2" th:selected="${goods != null and goods.status == 2}">⚠️ 缺货</option>
+                                    <option value="0" th:selected="${goods != null and goods.status == 0}">❌ 已下架</option>
+                                </select>
+                            </div>
+
+                            <!-- 封面图片管理 -->
+                            <div class="form-group full-width">
+                                <label class="form-label">封面图片管理</label>
+
+                                <!-- 当前图片显示 -->
+                                <div class="current-image-section" th:if="${goods != null and goods.mainImage != null and goods.mainImage != ''}">
+                                    <div class="current-image-label">📷 当前封面图片：</div>
+                                    <div class="current-image-wrapper">
+                                        <img th:src="${goods.mainImage}"
+                                             alt="当前封面图片"
+                                             class="current-image"
+                                             id="currentImageDisplay"
+                                             onerror="this.style.display='none'">
+                                    </div>
+                                </div>
+
+                                <!-- 更换图片 -->
+                                <div style="margin-top: 20px;">
+                                    <strong>🔄 更换新图片：</strong>
+                                    <div class="file-upload-wrapper" style="margin-top: 10px;">
+                                        <input type="file"
+                                               id="imageFile"
+                                               name="imageFile"
+                                               accept="image/*"
+                                               onchange="previewImage(this)">
+                                        <div class="upload-icon">📷</div>
+                                        <div class="upload-text">点击选择新的图片文件</div>
+                                    </div>
+
+                                    <!-- 新图片预览 -->
+                                    <div id="imagePreview" class="image-preview">
+                                        <img src="" alt="预览图片">
+                                        <br>
+                                        <button type="button" class="remove-image-btn" onclick="removeNewImage()">移除新选择的图片</button>
+                                    </div>
+                                </div>
+
+                                <!-- 删除当前图片选项 -->
+                                <div class="checkbox-wrapper" th:if="${goods != null and goods.mainImage != null and goods.mainImage != ''}">
+                                    <input type="checkbox" id="removeImage" name="removeImage" value="true">
+                                    <label for="removeImage">⚠️ 删除当前封面图片（删除后将无图片显示）</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <a href="/seller/goods" class="btn btn-secondary">
+                            ← 返回列表
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            💾 保存修改
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        // 预览新选择的图片
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var preview = document.getElementById('imagePreview');
+                    preview.querySelector('img').src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 移除新选择的图片（不影响当前图片）
+        function removeNewImage() {
+            document.getElementById('imageFile').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+
+        // 提交表单
+        function submitForm(event) {
+            event.preventDefault();
+
+            var form = document.getElementById('editForm');
+            var formData = new FormData(form);
+
+            var submitBtn = document.getElementById('submitBtn');
+            var originalText = submitBtn.innerHTML;
+
+            // 验证必填字段
+            var name = form.querySelector('[name="name"]').value.trim();
+            var description = form.querySelector('[name="description"]').value.trim();
+            var price = form.querySelector('[name="price"]').value;
+            var stock = form.querySelector('[name="stock"]').value;
+
+            if (!name || !description || !price || !stock) {
+                alert('❌ 请填写所有必填项！');
+                return;
+            }
+
+            if (parseFloat(price) <= 0) {
+                alert('❌ 价格必须大于0！');
+                return;
+            }
+
+            if (parseInt(stock) < 0) {
+                alert('❌ 库存不能为负数！');
+                return;
+            }
+
+            // 确认提交
+            if (!confirm('确定要保存修改吗？')) {
+                return;
+            }
+
+            // 显示加载状态
+            submitBtn.innerHTML = '⏳ 保存中...';
+            submitBtn.disabled = true;
+
+            fetch('/seller/goods/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    window.location.href = '/seller/goods';
+                } else {
+                    alert('❌ ' + data.message);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 更新失败：' + error.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>

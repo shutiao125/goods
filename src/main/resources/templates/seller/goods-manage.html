@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卖家后台 - 商品管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 5px 15px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* 筛选区域 */
+        .filter-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 表格 */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+
+        .goods-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .goods-table th,
+        .goods-table td {
+            padding: 16px 14px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .goods-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .goods-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .goods-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .goods-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .goods-name {
+            font-weight: 500;
+            color: #2c3e50;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .price {
+            color: #dc3545;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .status-outofstock { background: #fff3cd; color: #856404; }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+
+        /* 分页 */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 6px;
+            list-style: none;
+        }
+
+        .page-link {
+            padding: 8px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .page-link:hover,
+        .page-link.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .filter-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🏪 卖家中心</div>
+                <div class="user-info" th:text="${currentUser != null ? currentUser.username : '卖家'}">卖家账号</div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/seller/dashboard" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>仪表盘</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/seller/goods" class="nav-link active">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/seller/goods/publish" class="nav-link">
+                        <span class="nav-icon">➕</span>
+                        <span>发布商品</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/seller/orders" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>返回前台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="nav-link">
+                        <span class="nav-icon">🚪</span>
+                        <span>退出登录</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">📦 商品管理</h1>
+                <div class="header-actions">
+                    <a href="/seller/goods/publish" class="btn btn-success">
+                        ➕ 发布新商品
+                    </a>
+                </div>
+            </div>
+
+            <!-- 筛选区域 -->
+            <div class="filter-section">
+                <form th:action="@{/seller/goods}" method="get" class="filter-form">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="keyword">搜索商品</label>
+                        <input type="text"
+                               id="keyword"
+                               name="keyword"
+                               class="form-control"
+                               placeholder="输入商品名称或描述..."
+                               th:value="${keyword}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        🔍 搜索
+                    </button>
+
+                    <a href="/seller/goods" class="btn" style="background: #6c757d; color: white;">
+                        🔄 重置
+                    </a>
+                </form>
+            </div>
+
+            <!-- 商品列表 -->
+            <div class="table-container">
+                <table class="goods-table" th:if="${goods != null and !goods.isEmpty()}">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">图片</th>
+                            <th>商品名称</th>
+                            <th style="width: 120px;">价格</th>
+                            <th style="width: 90px;">库存</th>
+                            <th style="width: 100px;">状态</th>
+                            <th style="width: 160px;">销量</th>
+                            <th style="width: 180px;">发布时间</th>
+                            <th style="width: 220px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="good : ${goods}">
+                            <td>
+                                <img th:src="${good.mainImage != null and good.mainImage != '' ? good.mainImage : '/img/default-goods.png'}"
+                                     alt="商品图片"
+                                     class="goods-image"
+                                     onerror="this.src='/img/default-goods.png'">
+                            </td>
+                            <td>
+                                <div class="goods-name" th:text="${good.name}" th:title="${good.name}">商品名称</div>
+                                <small style="color: #6c757d; font-size: 12px;" th:if="${good.description != null and good.description.length() > 50}"
+                                       th:text="${good.description.substring(0, 50) + '...'}">描述...</small>
+                            </td>
+                            <td class="price" th:text="'¥' + ${good.price}">¥0.00</td>
+                            <td th:text="${good.stock != null ? good.stock : 0}">0</td>
+                            <td>
+                                <span class="status-badge status-active" th:if="${good.status == 1}">上架中</span>
+                                <span class="status-badge status-inactive" th:if="${good.status == 0}">已下架</span>
+                                <span class="status-badge status-outofstock" th:if="${good.status == 2}">缺货</span>
+                            </td>
+                            <td th:text="${good.salesCount != null ? good.salesCount : 0}">0</td>
+                            <td th:text="${#temporals.format(good.createdAt, 'yyyy-MM-dd')}">2024-01-01</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a th:href="@{/seller/goods/edit/{id}(id=${good.id})}" class="btn btn-primary btn-sm">
+                                        ✏️ 编辑
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-danger btn-sm"
+                                            th:data-id="${good.id}"
+                                            th:data-name="${good.name}"
+                                            onclick="deleteGoods(this)">
+                                        🗑️ 删除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 空状态 -->
+                <div th:if="${goods == null or goods.isEmpty()}" style="text-align: center; padding: 60px 20px;">
+                    <p style="font-size: 64px; margin-bottom: 20px;">📦</p>
+                    <h3 style="color: #495057; margin-bottom: 10px;">暂无商品数据</h3>
+                    <p style="color: #6c757d; margin-bottom: 25px;">您还没有发布任何商品，点击下方按钮开始吧！</p>
+                    <a href="/seller/goods/publish" class="btn btn-success" style="font-size: 16px; padding: 12px 32px;">
+                        ➕ 发布第一个商品
+                    </a>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination-wrapper" th:if="${page != null and page.total > 0}">
+                    <div class="pagination-info">
+                        共 <strong th:text="${page.total}">0</strong> 条记录，
+                        第 <strong th:text="${page.current}">1</strong> / <strong th:text="${page.pages}">1</strong> 页
+                    </div>
+
+                    <ul class="pagination" th:if="${page.pages > 1}">
+                        <li th:if="${page.hasPrevious()}">
+                            <a th:href="@{/seller/goods(pageNum=${page.current - 1}, keyword=${keyword})}"
+                               class="page-link">« 上一页</a>
+                        </li>
+
+                        <li th:each="i : ${#numbers.sequence(1, page.pages)}">
+                            <a th:href="@{/seller/goods(pageNum=${i}, keyword=${keyword})}"
+                               class="page-link"
+                               th:classappend="${i == page.current} ? 'active' : ''"
+                               th:text="${i}">1</a>
+                        </li>
+
+                        <li th:if="${page.hasNext()}">
+                            <a th:href="@{/seller/goods(pageNum=${page.current + 1}, keyword=${keyword})}"
+                               class="page-link">下一页 »</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        // 删除商品
+        function deleteGoods(btn) {
+            var id = btn.getAttribute('data-id');
+            var name = btn.getAttribute('data-name');
+
+            var confirmMessage = '⚠️ 确定要删除该商品吗？\n\n';
+            confirmMessage += '商品名称：' + name + '\n\n';
+            confirmMessage += '此操作将永久删除该商品及其所有数据！';
+
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            fetch('/seller/goods/delete/' + id, {
+                method: 'POST'
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 删除失败：' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>

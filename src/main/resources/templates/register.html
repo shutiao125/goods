@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 商品系统</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 550px;
+            width: 100%;
+            padding: 50px 40px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .register-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .message {
+            text-align: center;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            border-left: 3px solid;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #fff5f5;
+            border-color: #dc3545;
+        }
+
+        .success-message {
+            color: #28a745;
+            background: #f0fff4;
+            border-color: #28a745;
+        }
+
+        .role-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .role-option {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .role-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .role-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .role-option input[type="radio"] {
+            display: none;
+        }
+
+        .role-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .role-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .role-desc {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .seller-fields {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 3px solid #667eea;
+        }
+
+        .seller-fields.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-top: 25px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 40px 30px;
+            }
+            .role-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <div class="register-header">
+        <h1>📝 用户注册</h1>
+    </div>
+
+    <div th:if="${error}" class="message error-message">
+        ⚠️ <span th:text="${error}"></span>
+    </div>
+
+    <div th:if="${success}" class="message success-message">
+        ✅ <span th:text="${success}"></span>
+    </div>
+
+    <form th:action="@{/register}" method="post" id="registerForm">
+        <!-- 角色选择 -->
+        <div style="margin-bottom: 20px;">
+            <label style="font-size: 16px; font-weight: 600; color: #495057; display: block; margin-bottom: 12px;">
+                选择注册类型
+            </label>
+            <div class="role-selector">
+                <label class="role-option selected" id="userOption" onclick="selectRole('USER')">
+                    <input type="radio" name="registerType" value="USER" checked>
+                    <div class="role-icon">👤</div>
+                    <div class="role-title">普通用户</div>
+                    <div class="role-desc">购买商品、评价管理</div>
+                </label>
+
+                <label class="role-option" id="sellerOption" onclick="selectRole('SELLER')">
+                    <input type="radio" name="registerType" value="SELLER">
+                    <div class="role-icon">🏪</div>
+                    <div class="role-title">卖家</div>
+                    <div class="role-desc">发布商品、管理订单</div>
+                </label>
+            </div>
+        </div>
+
+        <!-- 基础信息（所有角色必填） -->
+        <div class="form-group">
+            <label for="username">👤 用户名 *</label>
+            <input type="text"
+                   id="username"
+                   name="username"
+                   placeholder="请输入用户名"
+                   required
+                   minlength="3"
+                   maxlength="50">
+        </div>
+
+        <div class="form-group">
+            <label for="email">📧 邮箱</label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   placeholder="请输入邮箱地址（可选）">
+        </div>
+
+        <div class="form-group">
+            <label for="password">🔒 密码 *</label>
+            <input type="password"
+                   id="password"
+                   name="password"
+                   placeholder="请输入密码（至少6位）"
+                   required
+                   minlength="6"
+                   maxlength="100">
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">✅ 确认密码 *</label>
+            <input type="password"
+                   id="confirmPassword"
+                   name="confirmPassword"
+                   placeholder="请再次输入密码"
+                   required
+                   oninput="checkPassword()">
+        </div>
+
+        <div id="passwordError" style="color: #dc3545; font-size: 13px; margin-top: -10px; margin-bottom: 10px; display: none;">
+            ❌ 两次密码不一致！
+        </div>
+
+        <!-- 卖家特有字段 -->
+        <div class="seller-fields" id="sellerFields">
+            <h3 style="margin-bottom: 15px; color: #667eea;">🏢 卖家信息补充</h3>
+
+            <div class="form-group">
+                <label for="companyName">公司名称 *</label>
+                <input type="text"
+                       id="companyName"
+                       name="companyName"
+                       placeholder="请输入公司或店铺名称"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="contactPhone">联系电话 *</label>
+                <input type="tel"
+                       id="contactPhone"
+                       name="contactPhone"
+                       placeholder="请输入联系电话"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="businessLicense">营业执照号</label>
+                <input type="text"
+                       id="businessLicense"
+                       name="businessLicense"
+                       placeholder="请输入营业执照号（可选）">
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn" onclick="return validateForm()">
+            🚀 立即注册
+        </button>
+    </form>
+
+    <div class="back-link">
+        <a th:href="@{/toLoginPage}">← 返回登录</a>
+    </div>
+</div>
+
+<script>
+function selectRole(role) {
+    const userOption = document.getElementById('userOption');
+    const sellerOption = document.getElementById('sellerOption');
+    const sellerFields = document.getElementById('sellerFields');
+
+    if (role === 'USER') {
+        userOption.classList.add('selected');
+        sellerOption.classList.remove('selected');
+        sellerFields.classList.remove('show');
+
+        // 清空卖家字段验证
+        document.getElementById('companyName').removeAttribute('required');
+        document.getElementById('contactPhone').removeAttribute('required');
+    } else if (role === 'SELLER') {
+        userOption.classList.remove('selected');
+        sellerOption.classList.add('selected');
+        sellerFields.classList.add('show');
+
+        // 添加卖家字段验证
+        document.getElementById('companyName').setAttribute('required', '');
+        document.getElementById('contactPhone').setAttribute('required', '');
+    }
+}
+
+function checkPassword() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const errorDiv = document.getElementById('passwordError');
+
+    if (confirmPassword && password !== confirmPassword) {
+        errorDiv.style.display = 'block';
+        return false;
+    } else {
+        errorDiv.style.display = 'none';
+        return true;
+    }
+}
+
+function validateForm() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        alert('两次输入的密码不一致！');
+        return false;
+    }
+
+    if (password.length < 6) {
+        alert('密码长度至少为6位！');
+        return false;
+    }
+
+    return true;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 30px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: white;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 16px;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon-blue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-icon-green {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .stat-icon-orange {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        }
+
+        .stat-icon-red {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .stat-icon-purple {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f3f5;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .action-btn {
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #212529;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .action-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">管理后台</div>
+            <div class="sidebar-subtitle">系统管理中心</div>
+        </div>
+        <nav class="nav-menu">
+            <a href="/admin/dashboard" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span>控制台</span>
+            </a>
+            <a href="/admin/goods" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>商品管理</span>
+            </a>
+            <a href="/admin/articles" class="nav-item">
+                <span class="nav-icon">📝</span>
+                <span>文章管理</span>
+            </a>
+            <a href="/admin/orders" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>订单管理</span>
+            </a>
+            <a href="/admin/users" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span>用户管理</span>
+            </a>
+            <a href="/admin/comments" class="nav-item">
+                <span class="nav-icon">💬</span>
+                <span>评论管理</span>
+            </a>
+            <a href="/" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>返回首页</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <h1 class="page-title">控制台</h1>
+            <div class="user-info">
+                <div class="user-avatar" th:text="${username != null ? #strings.toUpperCase(username.substring(0,1)) : 'A'}">A</div>
+                <span th:text="${username != null ? username : '管理员'}">管理员</span>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-logout">
+                        <span>🚪</span>
+                        <span>退出</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" th:text="${goodsCount}">0</div>
+                        <div class="stat-label">商品总数</div>
+                    </div>
+                    <div class="stat-icon stat-icon-blue">📦</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" th:text="${articleCount}">0</div>
+                        <div class="stat-label">文章总数</div>
+                    </div>
+                    <div class="stat-icon stat-icon-purple">📝</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" th:text="${userCount}">0</div>
+                        <div class="stat-label">用户总数</div>
+                    </div>
+                    <div class="stat-icon stat-icon-green">👥</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" th:text="${todayOrderCount}">0</div>
+                        <div class="stat-label">今日订单</div>
+                    </div>
+                    <div class="stat-icon stat-icon-orange">📋</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" th:text="'¥' + ${todayIncome}">¥0</div>
+                        <div class="stat-label">今日收入</div>
+                    </div>
+                    <div class="stat-icon stat-icon-red">💰</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">快捷操作</h2>
+            </div>
+            <div class="quick-actions">
+                <a href="/goods/publish" class="action-btn">
+                    <div class="action-icon">➕</div>
+                    <div class="action-label">发布商品</div>
+                </a>
+                <a href="/admin/goods" class="action-btn">
+                    <div class="action-icon">✏️</div>
+                    <div class="action-label">编辑商品</div>
+                </a>
+                <a href="/articles/create" class="action-btn">
+                    <div class="action-icon">📝</div>
+                    <div class="action-label">写新笔记</div>
+                </a>
+                <a href="/admin/articles" class="action-btn">
+                    <div class="action-icon">✍️</div>
+                    <div class="action-label">文章管理</div>
+                </a>
+                <a href="/admin/orders" class="action-btn">
+                    <div class="action-icon">📦</div>
+                    <div class="action-label">订单管理</div>
+                </a>
+                <a href="/admin/users" class="action-btn">
+                    <div class="action-icon">👤</div>
+                    <div class="action-label">用户管理</div>
+                </a>
+                <a href="/admin/comments" class="action-btn">
+                    <div class="action-icon">💬</div>
+                    <div class="action-label">评论管理</div>
+                </a>
+                <a href="/" class="action-btn">
+                    <div class="action-icon">🌐</div>
+                    <div class="action-label">查看前台</div>
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

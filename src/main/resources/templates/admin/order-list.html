@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订单</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .page-header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 24px; font-weight: bold; color: #333; }
+        .status-tabs { display: flex; gap: 16px; }
+        .status-tab { padding: 8px 16px; border-radius: 6px; cursor: pointer; color: #666; text-decoration: none; transition: all 0.3s; font-size: 14px; }
+        .status-tab:hover { background: #f8f9fa; }
+        .status-tab.active { background: #667eea; color: white; }
+        .order-list { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .order-item { padding: 24px; border-bottom: 1px solid #e9ecef; transition: all 0.3s; }
+        .order-item:hover { background: #f8f9fa; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
+        .order-info { display: flex; gap: 24px; align-items: center; }
+        .order-no { color: #666; font-size: 14px; }
+        .order-time { color: #999; font-size: 13px; }
+        .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+        .status-0 { background: #fff3cd; color: #856404; } /* 待付款 */
+        .status-1 { background: #cce5ff; color: #004085; } /* 待发货 */
+        .status-2 { background: #d4edda; color: #155724; } /* 已发货 */
+        .status-3 { background: #e2e3e5; color: #383d41; } /* 已完成 */
+        .status-4 { background: #f8d7da; color: #721c24; } /* 已取消 */
+        .goods-list { display: flex; gap: 16px; margin-bottom: 16px; }
+        .goods-image { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e9ecef; }
+        .goods-info { flex: 1; display: flex; justify-content: space-between; }
+        .goods-name { font-size: 14px; color: #333; line-height: 1.6; max-width: 400px; }
+        .goods-price { color: #dc3545; font-weight: 600; }
+        .order-footer { display: flex; justify-content: space-between; align-items: center; }
+        .total-amount { font-size: 18px; color: #333; }
+        .total-value { color: #dc3545; font-size: 22px; font-weight: bold; margin-left: 8px; }
+        .action-buttons { display: flex; gap: 12px; }
+        .btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; text-decoration: none; display: inline-block; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-outline { border: 1px solid #667eea; color: #667eea; background: white; }
+        .btn-outline:hover { background: #667eea; color: white; }
+        .empty-orders { text-align: center; padding: 80px 20px; background: white; border-radius: 8px; }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 30px; padding: 20px; }
+        .page-btn { padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; text-decoration: none; color: #333; }
+        .page-btn:hover { background: #667eea; color: white; border-color: #667eea; }
+        .page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .current-page { font-weight: bold; color: #667eea; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a th:href="@{/}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;">
+                ← 返回商品列表
+            </a>
+            <h1 class="page-title">📦 我的订单</h1>
+        </div>
+        <div class="status-tabs">
+            <a th:href="@{/order}" class="status-tab" th:classappend="${status == null} ? 'active' : ''">全部</a>
+            <a th:href="@{/order(status=0)}" class="status-tab" th:classappend="${status == 0} ? 'active' : ''">待付款</a>
+            <a th:href="@{/order(status=1)}" class="status-tab" th:classappend="${status == 1} ? 'active' : ''">待发货</a>
+            <a th:href="@{/order(status=2)}" class="status-tab" th:classappend="${status == 2} ? 'active' : ''">已发货</a>
+            <a th:href="@{/order(status=3)}" class="status-tab" th:classappend="${status == 3} ? 'active' : ''">已完成</a>
+        </div>
+    </div>
+
+    <div class="order-list">
+        <th:block th:if="${orders != null and !orders.isEmpty()}">
+            <div th:each="order : ${orders}" class="order-item">
+                <div class="order-header">
+                    <div class="order-info">
+                        <span class="order-no" th:text="'订单号：' + ${order.orderNo}">订单号</span>
+                        <span class="order-time" th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm:ss')}">时间</span>
+                    </div>
+                    <span class="status-badge"
+                          th:classappend="'status-' + ${order.status}"
+                          th:text="${order.status == 0 ? '待付款' : (order.status == 1 ? '待发货' : (order.status == 2 ? '已发货' : (order.status == 3 ? '已完成' : '已取消')))}">
+                            状态
+                        </span>
+                </div>
+
+                <div class="goods-list" th:each="item : ${order.items}">
+                    <img th:src="${item.goodsImage}" alt="" class="goods-image" onerror="this.src='/img/default-goods.png'">
+                    <div class="goods-info">
+                        <span class="goods-name" th:text="${item.goodsName}">商品名称</span>
+                        <span class="goods-price" th:text="'¥' + ${item.goodsPrice} + ' x ' + ${item.quantity}">¥0.00</span>
+                    </div>
+                </div>
+
+                <div class="order-footer">
+                    <div class="total-amount">
+                        实付：<span class="total-value" th:text="'¥' + ${order.payAmount}">¥0.00</span>
+                    </div>
+                    <div class="action-buttons">
+                        <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-outline">查看详情</a>
+                        <th:block th:if="${order.status == 0}">
+                            <!-- 待付款状态：显示"去支付"和"取消订单"按钮 -->
+                            <a th:href="@{'/order/' + ${order.id} + '/pay'}" class="btn btn-primary">💳 去支付</a>
+                            <button class="btn btn-danger" th:data-order-id="${order.id}" onclick="cancelUserOrder(this)">❌ 取消订单</button>
+                        </th:block>
+                        <th:block th:if="${order.status == 1}">
+                            <!-- 待发货状态：显示取消订单按钮 -->
+                            <button class="btn btn-danger" th:data-order-id="${order.id}" onclick="cancelUserOrder(this)">❌ 取消订单</button>
+                        </th:block>
+                        <th:block th:if="${order.status == 2}">
+                            <!-- 已发货状态：显示确认收货按钮 -->
+                            <button class="btn btn-success" th:data-order-id="${order.id}" onclick="confirmReceiveOrder(this)">✅ 确认收货</button>
+                        </th:block>
+                        <th:block th:if="${order.status == 3 or order.status == 4}">
+                            <!-- 已完成或已取消状态：只显示详情 -->
+                            <span th:text="${order.status == 3 ? '✅ 已完成' : '❌ 已取消'}"
+                                  style="color: #666; font-size: 13px; padding: 8px;"></span>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+
+        <div th:if="${orders == null or orders.isEmpty()}" class="empty-orders">
+            <div class="empty-icon">📦</div>
+            <h2>暂无订单</h2>
+            <p style="color: #999; margin-top: 10px;">快去选购心仪的商品吧！</p>
+            <a href="/static" class="btn btn-primary" style="margin-top: 20px;">去购物 →</a>
+        </div>
+    </div>
+
+    <th:block th:if="${orderPage != null and orderPage.pages > 1}">
+        <div class="pagination">
+            <a th:if="${orderPage.hasPrevious()}"
+               th:href="@{/order(pageNum=${orderPage.current - 1}, status=${status})}"
+               class="page-btn">上一页</a>
+            <span class="current-page" th:text="${orderPage.current} + '/' + ${orderPage.pages}">1/10</span>
+            <a th:if="${orderPage.hasNext()}"
+               th:href="@{/order(pageNum=${orderPage.current + 1}, status=${status})}"
+               class="page-btn">下一页</a>
+        </div>
+    </th:block>
+</div>
+
+<script th:inline="javascript">
+    // 获取CSRF Token
+    function getCsrfToken() {
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    console.log('✅ [用户订单] 页面加载完成');
+    console.log('🔐 [用户订单] CSRF Token:', getCsrfToken() ? '已获取' : '未找到');
+
+    // 用户取消订单
+    function cancelUserOrder(btn) {
+        const orderId = btn.getAttribute('data-order-id');
+        if (!orderId) {
+            alert('❌ 订单ID无效');
+            return;
+        }
+
+        if (!confirm('⚠️ 确定要取消该订单吗？\n\n取消后可以重新下单，但需要重新选择商品和地址。')) {
+            return;
+        }
+
+        console.log('🗑️ [用户订单] 取消订单, orderId:', orderId);
+
+        const csrfToken = getCsrfToken();
+
+        btn.disabled = true;
+        btn.textContent = '取消中...';
+
+        fetch('/order/' + orderId + '/cancel', {
+            method: 'POST',
+            headers: {
+                'X-XSRF-TOKEN': csrfToken
+            }
+        })
+            .then(response => {
+                console.log('✅ [用户订单] 取消响应状态:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('HTTP ' + response.status + '\n\n' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 [用户订单] 取消结果:', data);
+                if (data.success) {
+                    alert('✅ 订单已取消成功！');
+                    location.reload();
+                } else {
+                    alert('❌ 取消失败：' + (data.message || '未知错误'));
+                    btn.disabled = false;
+                    btn.textContent = '❌ 取消订单';
+                }
+            })
+            .catch(error => {
+                console.error('❌ [用户订单] 取消异常:', error);
+                alert('❌ 取消失败：' + error.message);
+                btn.disabled = false;
+                btn.textContent = '❌ 取消订单';
+            });
+    }
+
+    // 用户确认收货
+    function confirmReceiveOrder(btn) {
+        const orderId = btn.getAttribute('data-order-id');
+        if (!orderId) {
+            alert('❌ 订单ID无效');
+            return;
+        }
+
+        if (!confirm('✅ 确认已收到货物吗？\n\n确认后订单将标记为已完成。')) {
+            return;
+        }
+
+        console.log('📦 [用户订单] 确认收货, orderId:', orderId);
+
+        const csrfToken = getCsrfToken();
+
+        btn.disabled = true;
+        btn.textContent = '确认中...';
+
+        fetch('/order/' + orderId + '/confirm', {
+            method: 'POST',
+            headers: {
+                'X-XSRF-TOKEN': csrfToken
+            }
+        })
+            .then(response => {
+                console.log('✅ [用户订单] 确认收货响应状态:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('HTTP ' + response.status + '\n\n' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 [用户订单] 确认收货结果:', data);
+                if (data.success) {
+                    alert('🎉 已确认收货，感谢您的购买！');
+                    location.reload();
+                } else {
+                    alert('❌ 操作失败：' + (data.message || '未知错误'));
+                    btn.disabled = false;
+                    btn.textContent = '✅ 确认收货';
+                }
+            })
+            .catch(error => {
+                console.error('❌ [用户订单] 确认收货异常:', error);
+                alert('❌ 操作失败：' + error.message);
+                btn.disabled = false;
+                btn.textContent = '✅ 确认收货';
+            });
+    }
+</script>
+</body>
+</html>

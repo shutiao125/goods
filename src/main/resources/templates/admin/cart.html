@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>购物车</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .cart-header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .cart-title { font-size: 24px; font-weight: bold; color: #333; }
+        .cart-table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%; border-collapse: collapse; }
+        .cart-table th { background: #f8f9fa; padding: 15px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6; }
+        .cart-table td { padding: 15px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
+        .goods-info { display: flex; align-items: center; gap: 15px; }
+        .goods-image { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e9ecef; }
+        .goods-name { font-weight: 500; color: #333; max-width: 300px; }
+        .price { color: #dc3545; font-size: 18px; font-weight: bold; }
+        .quantity-control { display: flex; align-items: center; gap: 10px; }
+        .quantity-btn { width: 30px; height: 30px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+        .quantity-input { width: 60px; height: 30px; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
+        .subtotal { color: #dc3545; font-size: 18px; font-weight: bold; }
+        .delete-btn { color: #dc3545; cursor: pointer; text-decoration: none; font-size: 14px; }
+        .delete-btn:hover { text-decoration: underline; }
+        .cart-footer { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .total-info { font-size: 18px; }
+        .total-amount { color: #dc3545; font-size: 28px; font-weight: bold; }
+        .checkout-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 40px; border: none; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s; }
+        .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .empty-cart { text-align: center; padding: 60px 20px; background: white; border-radius: 8px; }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
+        .continue-shopping { display: inline-block; margin-top: 20px; color: #667eea; text-decoration: none; font-size: 16px; }
+        .continue-shopping:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="cart-header">
+        <h1 class="cart-title">🛒 我的购物车</h1>
+        <a href="/" class="continue-shopping">继续购物 →</a>
+    </div>
+
+    <th:block th:if="${cartItems != null and !cartItems.isEmpty()}">
+        <table class="cart-table">
+            <thead>
+            <tr>
+                <th>商品信息</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>小计</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${cartItems}" th:data-cart-id="${item.cart.id}">
+                <td>
+                    <div class="goods-info">
+                        <img th:src="${item.goods.mainImage}" alt="" class="goods-image" onerror="this.src='/img/default-goods.png'">
+                        <span class="goods-name" th:text="${item.goods.name}">商品名称</span>
+                    </div>
+                </td>
+                <td><span class="price" th:text="'¥' + ${item.goods.price}">¥0.00</span></td>
+                <td>
+                    <div class="quantity-control">
+                        <button type="button" class="quantity-btn btn-decrease"
+                                data-action="decrease"
+                                th:data-quantity="${item.cart.quantity}">-</button>
+                        <input type="number" class="quantity-input" th:value="${item.cart.quantity}" min="1" readonly>
+                        <button type="button" class="quantity-btn btn-increase"
+                                data-action="increase"
+                                th:data-quantity="${item.cart.quantity}">+</button>
+                    </div>
+                </td>
+                <td><span class="subtotal" th:text="'¥' + ${item.subtotal}">¥0.00</span></td>
+                <td><a href="#" class="delete-btn" data-action="delete">删除</a></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="cart-footer">
+            <div class="total-info">
+                共 <strong th:text="${totalCount}">0</strong> 件商品
+                合计：<span class="total-amount" th:text="'¥' + ${totalAmount}">¥0.00</span>
+            </div>
+            <button class="checkout-btn" onclick="goToCheckout()">去结算</button>
+        </div>
+    </th:block>
+
+    <div th:if="${cartItems == null or cartItems.isEmpty()}" class="empty-cart">
+        <div class="empty-icon">🛒</div>
+        <h2>购物车是空的</h2>
+        <p style="color: #666; margin-top: 10px;">快去挑选心仪的商品吧！</p>
+        <a href="/" class="continue-shopping">去购物 →</a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // 获取CSRF Token（多种方式）
+    function getCsrfToken() {
+        // 方式1：从Cookie获取
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        if (match) {
+            console.log('✅ [购物车] 从Cookie获取CSRF Token成功');
+            return decodeURIComponent(match[1]);
+        }
+
+        // 方式2：从meta标签获取
+        const metaTag = document.querySelector('meta[name="_csrf"]');
+        if (metaTag && metaTag.content) {
+            console.log('✅ [购物车] 从meta标签获取CSRF Token成功');
+            return metaTag.content;
+        }
+
+        // 方式3：从隐藏输入框获取
+        const input = document.querySelector('input[name="_csrf"]');
+        if (input && input.value) {
+            console.log('✅ [购物车] 从隐藏输入框获取CSRF Token成功');
+            return input.value;
+        }
+
+        console.warn('⚠️ [购物车] 未找到CSRF Token！POST请求可能会失败。');
+        return '';
+    }
+
+    // 获取所有购物车项ID
+    function getCartIds() {
+        const cartIds = [];
+        const rows = document.querySelectorAll('tr[data-cart-id]');
+        console.log('🛒 [购物车] 找到购物车行数:', rows.length);
+
+        rows.forEach(function(row, index) {
+            const id = row.getAttribute('data-cart-id');
+            console.log(`🛒 [购物车] 第${index + 1}行, data-cart-id:`, id, '(类型:', typeof id, ')');
+
+            if (id && id !== 'null' && id !== 'undefined' && !id.startsWith('${')) {
+                cartIds.push(id);
+            } else if (id && id.startsWith('${')) {
+                console.error('❌ [购物车] Thymeleaf表达式未解析！原始值:', id);
+                console.error('❌ [购物车] 这通常意味着：');
+                console.error('   1. 浏览器缓存了旧版本页面 → 请强制刷新(Ctrl+F5)');
+                console.error('   2. Thymeleaf模板语法错误 → 请检查HTML源代码');
+                console.error('   3. 控制器未正确传递数据 → 请检查后端日志');
+            }
+        });
+
+        console.log('🛒 [购物车] 最终获取的cartIds:', cartIds);
+        return cartIds;
+    }
+
+    // 使用事件委托处理所有按钮点击
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ [购物车] 页面加载完成');
+        console.log('🔐 [购物车] CSRF Token:', getCsrfToken() ? '已获取' : '未找到');
+
+        // 监听整个文档的点击事件（更可靠）
+        document.addEventListener('click', function(e) {
+            // 查找最近的tr元素（当前商品行）
+            const row = e.target.closest('tr[data-cart-id]');
+            if (!row) return;
+
+            const cartId = row.getAttribute('data-cart-id');
+            if (!cartId) {
+                console.warn('⚠️ [购物车] 未找到cartId');
+                return;
+            }
+
+            console.log('🛒 [购物车] 点击操作, target:', e.target.tagName, ', cartId:', cartId);
+
+            // 判断点击的是哪个按钮（使用closest查找）
+            const decreaseBtn = e.target.closest('.btn-decrease');
+            const increaseBtn = e.target.closest('.btn-increase');
+            const deleteBtn = e.target.closest('.delete-btn');
+
+            if (decreaseBtn) {
+                // 减少数量
+                const currentQty = parseInt(decreaseBtn.getAttribute('data-quantity'));
+                console.log('📉 点击减少按钮, 当前数量:', currentQty);
+                updateQuantity(cartId, currentQty - 1);
+            }
+            else if (increaseBtn) {
+                // 增加数量
+                const currentQty = parseInt(increaseBtn.getAttribute('data-quantity'));
+                console.log('📈 点击增加按钮, 当前数量:', currentQty);
+                updateQuantity(cartId, currentQty + 1);
+            }
+            else if (deleteBtn) {
+                // 删除商品
+                e.preventDefault();
+                console.log('🗑️ 点击删除按钮');
+                deleteCart(cartId);
+            }
+        });
+    });
+
+    function updateQuantity(cartId, newQuantity) {
+        if (newQuantity < 1) {
+            if (confirm('数量不能小于1，确定要删除该商品吗？')) {
+                deleteCart(cartId);
+            }
+            return;
+        }
+
+        console.log('📝 [购物车] 更新数量:', cartId, '→', newQuantity);
+
+        const csrfToken = getCsrfToken();
+        console.log('🔐 [购物车] 发送请求, CSRF Token:', csrfToken ? '有值' : '空');
+
+        fetch('/cart/update/' + cartId + '?quantity=' + newQuantity, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-XSRF-TOKEN': csrfToken
+            }
+        })
+            .then(response => {
+                console.log('✅ [购物车] 更新响应状态:', response.status, response.statusText);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error('❌ [购物车] 响应内容:', text.substring(0, 200));
+                        throw new Error('HTTP ' + response.status + '\n\n' + text.substring(0, 200));
+                    });
+                }
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.warn('⚠️ [购物车] 响应不是JSON格式:', text.substring(0, 100));
+                        return {success: true, message: text};
+                    }
+                });
+            })
+            .then(data => {
+                console.log('📦 [购物车] 更新结果:', data);
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('❌ ' + (data.message || '更新失败'));
+                }
+            })
+            .catch(error => {
+                console.error('❌ [购物车] 更新失败:', error);
+                alert('❌ 更新失败: ' + error.message + '\n\n请检查浏览器控制台获取详细信息');
+            });
+    }
+
+    function deleteCart(cartId) {
+        if (!confirm('确定要删除该商品吗？')) return;
+
+        console.log('🗑️ [购物车] 删除商品:', cartId);
+
+        const csrfToken = getCsrfToken();
+        fetch('/cart/delete/' + cartId, {
+            method: 'DELETE',
+            headers: {
+                'X-XSRF-TOKEN': csrfToken
+            }
+        })
+            .then(response => {
+                console.log('✅ [购物车] 删除响应状态:', response.status, response.statusText);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error('❌ [购物车] 响应内容:', text.substring(0, 200));
+                        throw new Error('HTTP ' + response.status + '\n\n' + text.substring(0, 200));
+                    });
+                }
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.warn('⚠️ [购物车] 响应不是JSON格式:', text.substring(0, 100));
+                        return {success: true, message: text};
+                    }
+                });
+            })
+            .then(data => {
+                console.log('📦 [购物车] 删除结果:', data);
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            })
+            .catch(error => {
+                console.error('❌ [购物车] 删除失败:', error);
+                alert('❌ 删除失败: ' + error.message + '\n\n请检查浏览器控制台获取详细信息');
+            });
+    }
+
+    function goToCheckout() {
+        console.log('💳 [购物车] 开始结算流程...');
+
+        const cartIds = getCartIds();
+        console.log('💳 [购物车] 获取到的cartIds:', cartIds);
+        console.log('💳 [购物车] cartIds类型:', typeof cartIds, '长度:', cartIds ? cartIds.length : 0);
+
+        if (!cartIds || cartIds.length === 0) {
+            alert('⚠️ 购物车为空，无法结算');
+            return;
+        }
+
+        // 验证cartIds是否都是有效的数字
+        const validCartIds = cartIds.filter(id => {
+            const num = parseInt(id);
+            return !isNaN(num) && num > 0;
+        });
+
+        console.log('💳 [购物车] 有效的cartIds:', validCartIds);
+
+        if (validCartIds.length === 0) {
+            alert('❌ 购物车数据异常，请刷新页面重试');
+            console.error('❌ [购物车] 所有cartId都无效:', cartIds);
+            return;
+        }
+
+        // 使用数组参数形式，避免400错误
+        const url = '/order/create?' + validCartIds.map(id => 'cartIds=' + id).join('&');
+        console.log('💳 [购物车] 结算URL:', url);
+        console.log('💳 [购物车] 即将跳转到结算页面...');
+        window.location.href = url;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章管理 - 管理后台</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 30px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: white;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 16px;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .filter-section {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .filter-input {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 250px;
+            transition: all 0.3s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .btn-search {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            padding: 10px 24px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .table-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .table-count {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .article-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .article-cover {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .article-details h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .article-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .topic-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            color: #667eea;
+        }
+
+        .view-count {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-published {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 30px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #495057;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .pagination a:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .pagination .active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">管理后台</div>
+                <div class="sidebar-subtitle">系统管理中心</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/admin/dashboard" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>控制台</span>
+                </a>
+                <a href="/admin/goods" class="nav-item">
+                    <span class="nav-icon">📦</span>
+                    <span>商品管理</span>
+                </a>
+                <a href="/admin/articles" class="nav-item active">
+                    <span class="nav-icon">📝</span>
+                    <span>文章管理</span>
+                </a>
+                <a href="/admin/orders" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>订单管理</span>
+                </a>
+                <a href="/admin/users" class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span>用户管理</span>
+                </a>
+                <a href="/admin/comments" class="nav-item">
+                    <span class="nav-icon">💬</span>
+                    <span>评论管理</span>
+                </a>
+                <a href="/" class="nav-item">
+                    <span class="nav-icon">🏠</span>
+                    <span>返回首页</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部栏 -->
+            <div class="top-bar">
+                <h1 class="page-title">📝 文章管理</h1>
+                <div class="user-info">
+                    <div class="user-avatar" th:text="${#authentication.name.substring(0, 1)}">A</div>
+                    <span th:text="${#authentication.name}">管理员</span>
+                    <form action="/logout" method="post" style="display: inline;">
+                        <button type="submit" class="btn-logout">🚪 退出</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div th:if="${error != null}" class="error-message">
+                ❌ <span th:text="${error}">错误信息</span>
+            </div>
+
+            <!-- 筛选区域 -->
+            <div class="filter-section">
+                <form th:action="@{/admin/articles}" method="get" id="filterForm">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label class="filter-label">🔍 搜索：</label>
+                            <input type="text"
+                                   name="keyword"
+                                   class="filter-input"
+                                   placeholder="输入标题或内容关键词..."
+                                   th:value="${keyword}">
+                        </div>
+
+                        <div class="filter-item">
+                            <label class="filter-label">📂 分类：</label>
+                            <select name="topic" class="filter-select">
+                                <option value="" th:selected="${topic == null or topic == ''}">全部分类</option>
+                                <option th:each="t : ${topics}"
+                                        th:value="${t}"
+                                        th:text="${t}"
+                                        th:selected="${topic == t}">
+                                    分类名称
+                                </option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-search">🔍 搜索</button>
+                        <a href="/admin/articles" class="btn-reset">🔄 重置</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 数据表格 -->
+            <div class="data-table-container">
+                <div class="table-header">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <h2 class="table-title">文章列表</h2>
+                        <a href="/articles"
+                           target="_blank"
+                           style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; transition: all 0.3s ease;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            🌐 前往前台文章列表
+                        </a>
+                    </div>
+                    <span class="table-count" th:if="${page != null}">
+                        共 <strong th:text="${page.total}">0</strong> 篇文章
+                    </span>
+                </div>
+
+                <!-- 状态筛选栏 -->
+                <div th:if="${articles != null and !articles.isEmpty()}"
+                     style="display: flex; align-items: center; gap: 15px; padding: 12px 20px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                    <span style="font-weight: 600; color: #495057; font-size: 14px;">📊 状态筛选：</span>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="radio" name="statusFilter" value="" checked
+                               onchange="filterByStatus(this.value)"
+                               style="width: 16px; height: 16px; cursor: pointer;">
+                        <span>全部</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="radio" name="statusFilter" value="1"
+                               onchange="filterByStatus(this.value)"
+                               style="width: 16px; height: 16px; cursor: pointer;">
+                        <span style="color: #28a745; font-weight: 500;">✅ 已发布</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="radio" name="statusFilter" value="0"
+                               onchange="filterByStatus(this.value)"
+                               style="width: 16px; height: 16px; cursor: pointer;">
+                        <span style="color: #ffc107; font-weight: 500;">📝 草稿</span>
+                    </label>
+                    <span id="filterResult" style="margin-left: auto; font-size: 12px; color: #6c757d;"></span>
+                </div>
+
+                <th:block th:if="${articles != null and !articles.isEmpty()}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 350px;">文章信息</th>
+                                <th style="width: 120px;">分类</th>
+                                <th style="width: 80px;">浏览量</th>
+                                <th style="width: 100px;">状态</th>
+                                <th style="width: 150px;">发布时间</th>
+                                <th style="width: 200px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="article : ${articles}">
+                                <td>
+                                    <div class="article-info">
+                                        <div class="article-cover" th:if="${article.coverImage != null and article.coverImage != ''}">
+                                            <img th:src="${article.coverImage.startsWith('http') ? article.coverImage : '/img/' + article.coverImage}"
+                                                 alt=""
+                                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"
+                                                 onerror="this.style.display='none'">
+                                        </div>
+                                        <div class="article-cover" th:unless="${article.coverImage != null and article.coverImage != ''}">📝</div>
+                                        <div class="article-details">
+                                            <h4 th:title="${article.title}" th:text="${article.title}">文章标题</h4>
+                                            <div class="article-meta">
+                                                ID: <span th:text="${article.id}">-</span> |
+                                                作者ID: <span th:text="${article.userId}">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="topic-badge" th:text="${article.topic != null ? article.topic : '未分类'}">分类</span></td>
+                                <td><span class="view-count" th:text="${article.viewCount != null ? article.viewCount : 0}">0</span></td>
+                                <td>
+                                    <!-- 使用status字段判断状态 -->
+                                    <span class="status-badge status-published"
+                                          th:if="${article.status != null and article.status == 1}"
+                                          title="文章已发布，对所有人可见">
+                                        ✅ 已发布
+                                    </span>
+                                    <span class="status-badge status-draft"
+                                          th:if="${article.status == null or article.status == 0}"
+                                          title="草稿状态，仅作者和管理员可见">
+                                        📝 草稿
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:if="${article.createdAt != null}"
+                                          th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">
+                                        时间
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <a th:href="@{/articles/{id}(id=${article.id})}"
+                                           class="btn-action btn-view"
+                                           target="_blank">
+                                            👁️ 查看
+                                        </a>
+                                        <a th:href="@{/articles/edit/{id}(id=${article.id})}"
+                                           class="btn-action btn-edit">
+                                            ✏️ 编辑
+                                        </a>
+                                        <button type="button"
+                                                class="btn-action btn-delete"
+                                                th:onclick="'deleteArticle(' + ${article.id} + ')'">
+                                            🗑️ 删除
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 分页 -->
+                    <div class="pagination" th:if="${page != null and page.pages > 1}">
+                        <a th:if="${page.hasPrevious()}"
+                           th:href="@{/admin/articles(pageNum=${page.current}-1, keyword=${keyword}, topic=${topic})}">
+                            ← 上一页
+                        </a>
+
+                        <span class="active" th:text="${page.current}">1</span>
+                        / 共 <span th:text="${page.pages}">1</span> 页
+
+                        <a th:if="${page.hasNext()}"
+                           th:href="@{/admin/articles(pageNum=${page.current}+1, keyword=${keyword}, topic=${topic})}">
+                            下一页 →
+                        </a>
+                    </div>
+                </th:block>
+
+                <!-- 空状态 -->
+                <div th:if="${articles == null or articles.isEmpty()}" class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3 style="margin-bottom: 10px;">暂无文章数据</h3>
+                    <p>还没有任何种草笔记文章</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 从Cookie中获取CSRF Token（兼容CookieCsrfTokenRepository）
+        function getCsrfToken() {
+            const match = document.cookie.match(new RegExp('(?:^|; )' + encodeURIComponent('XSRF-TOKEN') + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+
+        var csrfHeaderName = 'X-XSRF-TOKEN';  // CookieCsrfTokenRepository使用的header名称
+        var csrfTokenValue = getCsrfToken() || [[${_csrf != null ? _csrf.token : ''}]];
+        
+        console.log('🔐 [CSRF] Token获取方式: ' + (getCsrfToken() ? 'Cookie' : 'Thymeleaf变量'));
+        console.log('🔐 [CSRF] Header名称:', csrfHeaderName);
+        console.log('🔐 [CSRF] Token值:', csrfTokenValue ? '已获取(' + csrfTokenValue.substring(0, 10) + '...)' : '未获取到');
+        /*]]>*/
+        
+        function deleteArticle(id) {
+            if (confirm('⚠️ 确定要删除这篇文章吗？\n\n此操作不可撤销！')) {
+                console.log('🗑️ 开始删除文章 ID: ' + id);
+                console.log('🔐 使用CSRF Token:', csrfTokenValue ? '有值' : '无值');
+                
+                fetch('/admin/articles/delete/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfTokenValue,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'  // ✅ 关键：发送Cookie
+                })
+                .then(response => {
+                    console.log('✅ 删除请求响应状态:', response.status);
+                    
+                    // 检查响应状态
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📦 删除响应数据:', data);
+                    
+                    // 安全访问属性
+                    const success = data.success === true;
+                    const message = data.message || (success ? '操作成功' : '操作失败');
+                    
+                    if (success) {
+                        alert('✅ ' + message);
+                        console.log('✅ 文章删除成功，准备刷新页面...');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    } else {
+                        alert('❌ ' + message);
+                        console.error('❌ 删除失败:', message);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ 删除失败（异常）:', error);
+                    alert('❌ 删除失败: ' + (error.message || '网络错误或服务器无响应'));
+                });
+            }
+        }
+
+        // ============================================
+        // 📊 状态筛选功能
+        // ============================================
+
+        function filterByStatus(status) {
+            console.log('📊 开始筛选，状态值:', status);
+
+            const rows = document.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+            let totalCount = rows.length;
+
+            rows.forEach((row, index) => {
+                // 获取该行文章的状态（从status-badge判断）
+                const statusBadge = row.querySelector('.status-published');
+                const isPublished = statusBadge !== null;
+
+                // 根据筛选条件决定是否显示
+                if (status === '') {
+                    // 显示全部
+                    row.style.display = '';
+                    visibleCount++;
+                } else if (status === '1' && isPublished) {
+                    // 筛选已发布
+                    row.style.display = '';
+                    visibleCount++;
+                } else if (status === '0' && !isPublished) {
+                    // 筛选草稿
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    // 不符合条件，隐藏
+                    row.style.display = 'none';
+                }
+            });
+
+            // 更新筛选结果提示
+            const filterResult = document.getElementById('filterResult');
+            if (filterResult) {
+                const statusText = status === '' ? '全部' :
+                                   status === '1' ? '已发布' : '草稿';
+                filterResult.textContent = `显示 ${visibleCount} / ${totalCount} 篇 (${statusText})`;
+                console.log(`📊 筛选完成: ${statusText}, 显示 ${visibleCount}/${totalCount} 篇`);
+            }
+
+            // 添加视觉反馈
+            highlightFilterOption(status);
+        }
+
+        function highlightFilterOption(status) {
+            const options = document.querySelectorAll('input[name="statusFilter"]');
+            options.forEach(option => {
+                const label = option.parentElement;
+                if (option.value === status) {
+                    label.style.fontWeight = '600';
+                    label.style.transform = 'scale(1.05)';
+                } else {
+                    label.style.fontWeight = 'normal';
+                    label.style.transform = 'scale(1)';
+                }
+            });
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ 文章管理页面加载完成');
+
+            // 统计各状态数量
+            setTimeout(() => {
+                const rows = document.querySelectorAll('tbody tr');
+                let publishedCount = 0;
+                let draftCount = 0;
+
+                rows.forEach(row => {
+                    const statusBadge = row.querySelector('.status-published');
+                    if (statusBadge !== null) {
+                        publishedCount++;
+                    } else {
+                        draftCount++;
+                    }
+                });
+
+                console.log(`📊 文章统计: 已发布 ${publishedCount} 篇, 草稿 ${draftCount} 篇, 共 ${rows.length} 篇`);
+
+                // 更新筛选结果
+                const filterResult = document.getElementById('filterResult');
+                if (filterResult) {
+                    filterResult.textContent = `共 ${rows.length} 篇 (已发布: ${publishedCount}, 草稿: ${draftCount})`;
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>评论管理 - 管理后台</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 30px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: white;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .btn-logout {
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-select,
+        .form-input {
+            padding: 10px 14px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .comment-list-wrapper {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .comment-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e9ecef;
+            transition: background 0.2s;
+        }
+
+        .comment-item:hover {
+            background: #f8f9fa;
+        }
+
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .comment-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .comment-meta {
+            flex: 1;
+        }
+
+        .comment-username {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .comment-time {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .comment-goods-info {
+            margin-bottom: 10px;
+            padding: 10px 14px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .comment-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        /* 管理员回复样式 */
+        .admin-reply {
+            margin: 15px 0;
+            padding: 15px 18px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .reply-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(40,167,69,0.2);
+        }
+
+        .reply-icon {
+            font-size: 16px;
+        }
+
+        .reply-label {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 14px;
+        }
+
+        .reply-time {
+            margin-left: auto;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .reply-content {
+            color: #444;
+            font-size: 14px;
+            line-height: 1.6;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .reply-content::before {
+            content: '↳';
+            position: absolute;
+            left: 5px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .comment-rating {
+            color: #ffc107;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            border: 1.5px solid #667eea;
+            color: #667eea;
+            background: white;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #adb5bd;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            color: #6c757d;
+        }
+
+        /* 回复弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .modal-form-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .modal-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        /* 分页 */
+        .pagination-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pagination-link {
+            padding: 10px 18px;
+            border: 1.5px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .pagination-link:hover:not(.disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-1px);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .comment-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">管理后台</div>
+            <div class="sidebar-subtitle">系统管理中心</div>
+        </div>
+        <nav class="nav-menu">
+            <a href="/admin/dashboard" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span>控制台</span>
+            </a>
+            <a href="/admin/goods" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>商品管理</span>
+            </a>
+            <a href="/admin/articles" class="nav-item">
+                <span class="nav-icon">📝</span>
+                <span>文章管理</span>
+            </a>
+            <a href="/admin/orders" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>订单管理</span>
+            </a>
+            <a href="/admin/users" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span>用户管理</span>
+            </a>
+            <a href="/admin/comments" class="nav-item active">
+                <span class="nav-icon">💬</span>
+                <span>评论管理</span>
+            </a>
+            <a href="/" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>返回首页</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <h1 class="page-title">评论管理</h1>
+            <div class="user-info">
+                <div class="user-avatar" th:text="${username != null ? #strings.toUpperCase(username.substring(0,1)) : 'A'}">A</div>
+                <span th:text="${username != null ? username : '管理员'}">管理员</span>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-logout">退出登录</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 筛选区域 -->
+        <div class="filter-section">
+            <div class="form-group">
+                <label class="form-label">评论类型：</label>
+                <select class="form-select" id="targetTypeFilter" onchange="applyFilter()">
+                    <option value="" th:selected="${targetType == null or targetType == ''}">全部类型</option>
+                    <option value="1" th:selected="${targetType == '1'}">🛍️ 商品评论</option>
+                    <option value="2" th:selected="${targetType == '2'}">📝 文章评论</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">审核状态：</label>
+                <select class="form-select" id="statusFilter" onchange="applyFilter()">
+                    <option value="" th:selected="${status == null or status == ''}">全部状态</option>
+                    <option value="0" th:selected="${status == '0'}">待审核</option>
+                    <option value="1" th:selected="${status == '1'}">已通过</option>
+                    <option value="2" th:selected="${status == '2'}">已拒绝</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="applyFilter()">🔍 搜索</button>
+        </div>
+
+        <!-- 评论列表 -->
+        <div class="comment-list-wrapper">
+            <!-- 调试信息（上线后删除） -->
+            <div th:if="${commentPage == null}" style="padding: 20px; background: #ffe6e6; border: 1px solid #ff9999; margin-bottom: 16px; border-radius: 4px;">
+                ⚠️ 调试：commentPage 对象为 null
+            </div>
+            <div th:if="${commentPage != null and commentPage.records == null}" style="padding: 20px; background: #fff3e6; border: 1px solid #ffb366; margin-bottom: 16px; border-radius: 4px;">
+                ⚠️ 调试：commentPage.records 为 null (总数: <span th:text="${commentPage.total}">0</span>)
+            </div>
+            <div th:if="${commentPage != null and commentPage.records != null}" style="padding: 10px; background: #e6f3ff; border: 1px solid #99ccff; margin-bottom: 16px; border-radius: 4px; font-size: 14px;">
+                总计：共 <span th:text="${commentPage.total}">0</span> 条评论，当前页 <span th:text="${commentPage.records.size()}">0</span> 条
+            </div>
+
+            <!-- 评论列表容器 -->
+            <div id="adminCommentsList">
+                <th:block th:each="comment : ${commentPage.records}">
+                    <!-- 父评论（parentId为空或0）-->
+                    <div th:if="${comment.parentId == null or comment.parentId == 0}" class="comment-item" th:id="'comment-' + ${comment.id}"
+                         style="padding: 20px; border-bottom: 1px solid #e9ecef;"
+                         onmouseenter="this.style.background='#f8f9fa'"
+                         onmouseleave="this.style.background='white'">
+                        <!-- 评论头部：用户信息和状态 -->
+                        <div class="comment-header">
+                            <div class="comment-user-info">
+                                <div class="comment-avatar" th:text="${comment.username != null ? #strings.toUpperCase(comment.username.substring(0,1)) : 'U'}">U</div>
+                                <div class="comment-meta">
+                                    <div class="comment-username" th:text="${comment.username != null ? comment.username : '匿名用户'}">用户名</div>
+                                    <div class="comment-time" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm:ss')}">时间</div>
+                                </div>
+                            </div>
+                            <span class="status-badge"
+                                  th:switch="${comment.status}">
+                                <span th:case="0" class="status-pending">待审核</span>
+                                <span th:case="1" class="status-approved">已通过</span>
+                                <span th:case="*" class="status-rejected">已拒绝</span>
+                            </span>
+                        </div>
+
+                        <!-- 评论类型和关联信息 -->
+                        <div class="comment-goods-info">
+                            <span th:switch="${comment.targetType}">
+                                <span th:case="1" style="color: #667eea; font-weight: 600;">🛍️ 商品评论</span>
+                                <span th:case="2" style="color: #28a745; font-weight: 600;">📝 文章评论</span>
+                                <span th:case="*" style="color: #ff9800; font-weight: 600;">⚠️ 待分类</span>
+                            </span>
+                            <span th:if="${comment.targetId != null}" style="margin-left: 12px; color: #666;">
+                                关联ID：<strong th:text="${comment.targetId}">-</strong>
+                                <a th:href="${comment.targetType == 1 ? '/goods/detail/' + comment.targetId : '/articles/' + comment.targetId}"
+                                   target="_blank"
+                                   style="margin-left: 8px; color: #667eea; text-decoration: none; font-size: 12px;">
+                                    查看详情 →
+                                </a>
+                            </span>
+                        </div>
+
+                        <!-- 评分（仅商品评论显示）-->
+                        <div class="comment-rating" th:if="${comment.targetType != null and comment.targetType == 1 and comment.rating != null}">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}" th:classappend="${i <= comment.rating} ? '★' : '☆'" style="color: #ffc107; font-size: 16px;"></span>
+                            <span style="color: #666; font-size: 14px; margin-left: 8px;" th:text="${comment.rating} + ' 分'">5分</span>
+                        </div>
+
+                        <!-- 评论内容 -->
+                        <div class="comment-content" style="margin-top: 10px; color: #333; line-height: 1.6; font-size: 14px;" th:text="${comment.content}">评论内容</div>
+
+                        <!-- 管理员回复（如果存在）-->
+                        <div class="admin-reply" th:if="${comment.reply != null and comment.reply != ''}"
+                             style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #28a745;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span>💬</span>
+                                <strong style="color: #28a745;">管理员回复</strong>
+                                <span style="color: #999; font-size: 12px;" th:if="${comment.replyTime != null}"
+                                      th:text="${#temporals.format(comment.replyTime, 'yyyy-MM-dd HH:mm')}">回复时间</span>
+                            </div>
+                            <div style="color: #555; line-height: 1.5;" th:text="${comment.reply}">回复内容</div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="comment-actions" style="margin-top: 15px;">
+                            <th:block th:if="${comment.status == 0}">
+                                <button class="action-btn btn-success" th:onclick="'approveComment(' + ${comment.id} + ')'">✓ 通过</button>
+                                <button class="action-btn btn-warning" th:onclick="'rejectComment(' + ${comment.id} + ')'">✕ 拒绝</button>
+                            </th:block>
+                            <button class="action-btn btn-outline" th:onclick="'showReplyModal(' + ${comment.id} + ')'">💬 回复</button>
+                            <button class="action-btn btn-danger" th:onclick="'deleteComment(' + ${comment.id} + ')'">🗑 删除</button>
+                        </div>
+
+                        <!-- 子评论区域（回复）-->
+                        <div th:if="${commentPage.records != null}" style="margin-left: 60px; margin-top: 15px; padding-left: 18px; border-left: 3px solid #e8f0fe;">
+                            <th:block th:each="reply : ${commentPage.records}">
+                                <div th:if="${reply.parentId != null and reply.parentId == comment.id}" class="reply-item" th:id="'comment-' + ${reply.id}"
+                                     style="padding: 12px 0; border-bottom: 1px solid #f8f9fa;"
+                                     onmouseenter="this.style.background='#fafbff'"
+                                     onmouseleave="this.style.background='transparent'">
+                                    <div style="display: flex; gap: 10px;">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%;
+                                            background: linear-gradient(135deg, #a78bfa, #ec4899);
+                                            display: flex; align-items: center; justify-content: center;
+                                            color: white; font-weight: bold; font-size: 13px; flex-shrink: 0;"
+                                            th:text="${reply.username != null ? #strings.toUpperCase(reply.username.substring(0,1)) : '?'}">?</div>
+
+                                        <div style="flex: 1;">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                                <strong style="color: #333; font-size: 13px;" th:text="${reply.username != null ? reply.username : '匿名用户'}">用户名</strong>
+                                                <span style="color: #999; font-size: 11px;">回复</span>
+                                                <strong style="color: #667eea; font-size: 13px;" th:text="'@' + (${comment.username != null ? comment.username : '匿名用户'})">@原评论者</strong>
+                                                <span style="color: #ccc; margin: 0 4px;">·</span>
+                                                <span style="color: #999; font-size: 11px;" th:text="${#temporals.format(reply.createdAt, 'yyyy-MM-dd HH:mm:ss')}">时间</span>
+                                            </div>
+
+                                            <p style="color: #555; line-height: 1.6; margin-bottom: 8px; font-size: 13px;" th:text="${reply.content}">回复内容</p>
+
+                                            <div style="display: flex; gap: 12px; font-size: 12px;">
+                                                <span class="status-badge"
+                                                      th:switch="${reply.status}"
+                                                      style="font-size: 11px; padding: 2px 8px;">
+                                                    <span th:case="0" class="status-pending">待审核</span>
+                                                    <span th:case="1" class="status-approved">已通过</span>
+                                                    <span th:case="*" class="status-rejected">已拒绝</span>
+                                                </span>
+                                                <button class="action-btn btn-outline" th:onclick="'showReplyModal(' + ${reply.id} + ')'" style="padding: 4px 10px; font-size: 12px;">💬 回复</button>
+                                                <button class="action-btn btn-danger" th:onclick="'deleteComment(' + ${reply.id} + ')'" style="padding: 4px 10px; font-size: 12px;">🗑 删除</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+                </th:block>
+            </div>
+
+            <!-- 空状态 -->
+            <div th:if="${commentPage == null or commentPage.records == null or #lists.isEmpty(commentPage.records)}" class="empty-state">
+                <div class="empty-icon">💬</div>
+                <div class="empty-text">暂无评论数据</div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <th:block th:if="${commentPage != null and commentPage.pages > 1}">
+            <div class="pagination-wrapper">
+                <a th:if="${commentPage.hasPrevious()}"
+                   th:href="@{/admin/comments(pageNum=${commentPage.prePage}, status=${status})}"
+                   class="pagination-link">上一页</a>
+                <span class="pagination-info" th:text="'第 ' + ${commentPage.pageNum} + ' 页 / 共 ' + ${commentPage.pages} + ' 页'">1/1</span>
+                <a th:if="${commentPage.hasNext()}"
+                   th:href="@{/admin/comments(pageNum=${commentPage.nextPage}, status=${status})}"
+                   class="pagination-link">下一页</a>
+            </div>
+        </th:block>
+    </main>
+</div>
+
+<!-- 回复弹窗 -->
+<div id="replyModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 class="modal-title">💬 回复评论</h2>
+        <div class="modal-form-group">
+            <label class="modal-form-label">回复内容</label>
+            <textarea class="modal-form-textarea" id="replyContent" placeholder="请输入回复内容..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" onclick="closeReplyModal()">取消</button>
+            <button class="modal-btn modal-btn-primary" onclick="submitReply()">发送回复</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let currentCommentId = null;
+
+    // 获取CSRF Token
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content')
+        || document.querySelector('input[name="_csrf"]')?.value
+        || '';
+
+    function applyFilter() {
+        const targetType = document.getElementById('targetTypeFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        let url = '/admin/comments?';
+        if (targetType) url += 'targetType=' + targetType + '&';
+        if (status) url += 'status=' + status;
+        window.location.href = url;
+    }
+
+    function approveComment(id) {
+        if (!confirm('确定通过这条评论吗？')) return;
+
+        fetch('/admin/comments/approve/' + id, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data === true) {
+                    alert('✅ 已通过审核');
+                    location.reload();
+                } else {
+                    alert('❌ 操作失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('网络错误，请重试');
+            });
+    }
+
+    function rejectComment(id) {
+        if (!confirm('确定拒绝这条评论吗？')) return;
+
+        fetch('/admin/comments/reject/' + id, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data === true) {
+                    alert('✅ 已拒绝该评论');
+                    location.reload();
+                } else {
+                    alert('❌ 操作失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('网络错误，请重试');
+            });
+    }
+
+    function deleteComment(id) {
+        if (!confirm('确定删除这条评论吗？此操作不可恢复！')) return;
+
+        fetch('/admin/comments/delete/' + id, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data === true) {
+                    alert('✅ 已删除评论');
+                    location.reload();
+                } else {
+                    alert('❌ 删除失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('网络错误，请重试');
+            });
+    }
+
+    function showReplyModal(id) {
+        currentCommentId = id;
+        document.getElementById('replyModal').classList.add('show');
+        document.getElementById('replyContent').value = '';
+        document.getElementById('replyContent').focus();
+    }
+
+    function closeReplyModal() {
+        document.getElementById('replyModal').classList.remove('show');
+        currentCommentId = null;
+    }
+
+    function submitReply() {
+        const replyContent = document.getElementById('replyContent').value.trim();
+
+        if (!replyContent) {
+            alert('请输入回复内容');
+            return;
+        }
+
+        const formData = new URLSearchParams();
+        formData.append('replyContent', replyContent);
+
+        fetch('/admin/comments/reply/' + currentCommentId, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ 回复成功！');
+                    closeReplyModal();
+                    location.reload();
+                } else {
+                    alert('❌ 回复失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('网络错误，请重试');
+            });
+    }
+
+    // 点击遮罩层关闭弹窗
+    document.getElementById('replyModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeReplyModal();
+        }
+    });
+
+    // ESC键关闭弹窗
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeReplyModal();
+        }
+    });
+</script>
+</body>
+</html>

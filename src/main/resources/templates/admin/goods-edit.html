@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品管理</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 30px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: white;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: #f8f9fa;
+        }
+
+        .data-table th {
+            padding: 16px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .data-table td {
+            padding: 16px;
+            font-size: 14px;
+            color: #212529;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .product-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f1f3f5;
+        }
+
+        .product-name {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-on {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        .status-off {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+
+        .status-out {
+            background: #fff3cd;
+            color: #ffc107;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #5568d3;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">管理后台</div>
+                <div class="sidebar-subtitle">系统管理中心</div>
+            </div>
+            <nav class="nav-menu">
+                <a href="/admin/dashboard" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>控制台</span>
+                </a>
+                <a href="/admin/goods" class="nav-item active">
+                    <span class="nav-icon">📦</span>
+                    <span>商品管理</span>
+                </a>
+                <a href="/admin/articles" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span>文章管理</span>
+                </a>
+                <a href="/admin/orders" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>订单管理</span>
+                </a>
+                <a href="/admin/users" class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span>用户管理</span>
+                </a>
+                <a href="/admin/comments" class="nav-item">
+                    <span class="nav-icon">💬</span>
+                    <span>评论管理</span>
+                </a>
+                <a href="/" class="nav-item">
+                    <span class="nav-icon">🏠</span>
+                    <span>返回首页</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 class="page-title">商品管理</h1>
+                <div class="top-right">
+                    <a href="/goods/publish" class="btn-primary">
+                        <span>➕</span>
+                        <span>发布商品</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" style="margin: 0;">
+                        <button type="submit" class="btn-logout">
+                            <span>🚪</span>
+                            <span>退出</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>商品信息</th>
+                            <th>价格</th>
+                            <th>库存</th>
+                            <th>销量</th>
+                            <th>状态</th>
+                            <th>上架时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${goods}">
+                            <td>
+                                <div class="product-cell">
+                                    <img th:src="${item.mainImage != null and item.mainImage != '' ? item.mainImage : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Crect width=%2260%22 height=%2260%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E无图%3C/text%3E%3C/svg%3E'}"
+                                         th:alt="${item.name}"
+                                         class="product-image">
+                                    <div>
+                                        <div class="product-name" th:text="${item.name}">商品名称</div>
+                                        <div style="font-size: 12px; color: #6c757d; margin-top: 4px;" 
+                                             th:text="${item.description != null and item.description.length() > 30 ? item.description.substring(0, 30) + '...' : (item.description != null ? item.description : '')}">描述</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #dc3545;">
+                                    ¥<span th:text="${item.price}">0.00</span>
+                                </div>
+                                <div th:if="${item.originalPrice != null and item.originalPrice > item.price}" 
+                                     style="font-size: 12px; color: #adb5bd; text-decoration: line-through;">
+                                    ¥<span th:text="${item.originalPrice}">0.00</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:class="${item.stock > 50 ? 'stock-high' : (item.stock > 10 ? 'stock-medium' : 'stock-low')}"
+                                      th:text="${item.stock}"
+                                      style="font-weight: 500;"
+                                      th:styleappend="${item.stock > 50 ? 'color: #28a745;' : (item.stock > 10 ? 'color: #ffc107;' : 'color: #dc3545;')}">0</span>
+                            </td>
+                            <td>
+                                <span th:text="${item.salesCount}" style="font-weight: 500;">0</span>
+                            </td>
+                            <td>
+                                <span th:if="${item.status == 1}" class="status-badge status-on">在售</span>
+                                <span th:if="${item.status == 0}" class="status-badge status-off">下架</span>
+                                <span th:if="${item.status == 2}" class="status-badge status-out">缺货</span>
+                            </td>
+                            <td>
+                                <span th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a th:href="@{/goods/edit/{id}(id=${item.id})}" class="btn-sm btn-edit">
+                                        <span>✏️</span>
+                                        <span>编辑</span>
+                                    </a>
+                                    <form th:action="@{/goods/delete/{id}(id=${item.id})}" method="post" 
+                                          onsubmit="return confirm('确定要删除这个商品吗？');" style="display: inline;">
+                                        <button type="submit" class="btn-sm btn-delete">
+                                            <span>🗑️</span>
+                                            <span>删除</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div th:if="${goods == null or goods.isEmpty()}" class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h3>暂无商品</h3>
+                    <p style="margin-top: 8px; font-size: 14px;">点击右上角"发布商品"添加第一个商品</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

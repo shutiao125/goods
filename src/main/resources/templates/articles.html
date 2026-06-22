@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>种草笔记 - 发现好物</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* 搜索和筛选区域 */
+        .filter-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .filter-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .filter-title::before {
+            content: '🔍';
+            font-size: 20px;
+        }
+
+        .search-bar {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+            padding-left: 5px;
+        }
+
+        .filter-label::before {
+            content: '|';
+            color: #667eea;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+            background: white;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .date-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+            background: white;
+        }
+
+        .topic-select {
+            padding: 12px 16px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .topic-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .btn-search {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            height: fit-content;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+
+        .btn-reset {
+            padding: 12px 28px;
+            background: white;
+            color: #666;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            height: fit-content;
+        }
+
+        .btn-reset:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f8f9ff;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .search-bar {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .filter-group:nth-child(1) {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-group:nth-child(1),
+            .filter-group:nth-child(2),
+            .filter-group:nth-child(3) {
+                grid-column: 1;
+            }
+        }
+
+        /* 批量操作区域 */
+        .batch-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            margin-top: -12px;
+        }
+
+        .batch-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .checkbox-all {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .checkbox-all input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .selected-count {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .selected-count strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .batch-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-batch-delete {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-batch-delete:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-batch-delete:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-batch-delete:disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-batch-download {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-batch-download:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-batch-download:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-batch-download:disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 文章卡片复选框 */
+        .article-card {
+            position: relative;
+        }
+
+        .card-checkbox {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        /* 文章网格 */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        /* 文章卡片 */
+        .article-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .article-card.is-top::before {
+            content: '📌 置顶';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .article-cover {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+
+        .article-content {
+            padding: 20px;
+        }
+
+        .article-topic {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .article-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .article-excerpt {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .article-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .article-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .navbar-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/" class="logo">
+            🌿 种草笔记
+        </a>
+        <div class="nav-links">
+            <a href="/articles" class="nav-link active">📝 笔记</a>
+            <a href="/" class="nav-link">🛍️ 商品</a>
+            <a href="/cart" class="nav-link">🛒 购物车</a>
+            <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 15px;">
+                <span style="color: rgba(255,255,255,0.9); font-size: 14px;">
+                    👤 <span th:text="${#authentication.name}">用户</span>
+                </span>
+                <a href="/logout" class="nav-link" style="padding: 6px 14px; background: rgba(255,255,255,0.2); border-radius: 20px; text-decoration: none; color: white; font-size: 13px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">🚪 退出</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 主容器 -->
+<div class="container">
+    <!-- 页面标题 -->
+    <div class="page-header">
+        <h1 class="page-title">✨ 种草笔记</h1>
+        <p class="page-subtitle">发现好物，分享生活</p>
+
+        <!-- 创建文章按钮（所有已登录用户可见） -->
+        <div sec:authorize="isAuthenticated()" style="margin-top: 20px;">
+            <a href="/articles/create" 
+               style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; transition: all 0.3s;"
+               onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102,126,234,0.4)'"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                ✍️ 写新笔记
+            </a>
+        </div>
+    </div>
+
+    <!-- 搜索和筛选 -->
+    <div class="filter-section">
+        <div class="filter-title">筛选条件</div>
+
+        <form th:action="@{/articles}" method="get" class="search-bar">
+            <!-- 关键词搜索 -->
+            <div class="filter-group">
+                <label class="filter-label">关键词搜索</label>
+                <input type="text"
+                       name="keyword"
+                       class="search-input"
+                       placeholder="输入文章标题或内容描述..."
+                       th:value="${keyword}">
+            </div>
+
+            <!-- 开始日期 -->
+            <div class="filter-group">
+                <label class="filter-label">开始日期</label>
+                <input type="date"
+                       name="startDate"
+                       class="date-input"
+                       th:value="${startDate}">
+            </div>
+
+            <!-- 结束日期 -->
+            <div class="filter-group">
+                <label class="filter-label">结束日期</label>
+                <input type="date"
+                       name="endDate"
+                       class="date-input"
+                       th:value="${endDate}">
+            </div>
+
+            <!-- 搜索按钮 -->
+            <button type="submit" class="btn-search">
+                🔍 搜索
+            </button>
+
+            <!-- 重置按钮 -->
+            <a th:href="@{/articles}" class="btn-reset">
+                🔄 重置
+            </a>
+        </form>
+    </div>
+
+    <!-- 批量操作区域（仅管理员可见） -->
+    <div th:if="${articles != null and !articles.isEmpty()}" class="batch-actions" th:with="isAdmin=${#authorization.expr('hasRole(''ROLE_ADMIN'')')}">
+        <th:block th:if="${isAdmin}">
+            <div class="batch-left">
+                <label class="checkbox-all">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    <span>全选</span>
+                </label>
+                <span class="selected-count">已选择 <strong id="selectedCount">0</strong> 项</span>
+            </div>
+            <div class="batch-right">
+                <button type="button" class="btn-batch-delete" id="batchDeleteBtn" onclick="batchDeleteArticles()" disabled>
+                    <span>🗑️</span>
+                    <span>批量删除</span>
+                </button>
+                <button type="button" class="btn-batch-download" id="batchDownloadBtn" onclick="batchDownloadArticles()" disabled>
+                    <span>📥</span>
+                    <span>下载</span>
+                </button>
+            </div>
+        </th:block>
+        <!-- 非管理员时显示提示 -->
+        <th:block th:unless="${isAdmin}">
+            <div style="color: #999; font-size: 14px; font-style: italic;">
+                💡 提示：仅管理员可进行批量操作
+            </div>
+        </th:block>
+    </div>
+
+    <!-- 文章列表 -->
+    <div th:if="${articles != null and !articles.isEmpty()}" class="articles-grid">
+        <div th:each="article : ${articles}"
+             class="article-card"
+             th:classappend="${article.isTop != null and article.isTop == 1} ? 'is-top' : ''">
+
+            <!-- 复选框（仅管理员可见） -->
+            <th:block th:if="${#authorization.expr('hasRole(''ROLE_ADMIN'')')}">
+                <input type="checkbox" class="card-checkbox"
+                       th:value="${article.id}"
+                       onchange="updateSelectedCount()">
+            </th:block>
+
+            <!-- 封面图 -->
+            <div class="article-cover" th:if="${article.coverImage != null and article.coverImage != ''}" th:onclick="'window.location.href=\'/articles/' + ${article.id} + '\''" style="cursor: pointer;">
+                <img th:src="${article.coverImage.startsWith('http') ? article.coverImage : '/img/' + article.coverImage}"
+                     alt=""
+                     style="width: 100%; height: 100%; object-fit: cover;"
+                     onerror="this.parentElement.innerHTML = '📝'">
+            </div>
+            <div class="article-cover" th:unless="${article.coverImage != null and article.coverImage != ''}" th:onclick="'window.location.href=\'/articles/' + ${article.id} + '\''" style="cursor: pointer;">
+                📝
+            </div>
+
+            <!-- 内容 -->
+            <div class="article-content" th:onclick="'window.location.href=\'/articles/' + ${article.id} + '\''" style="cursor: pointer;">
+                <!-- 话题标签 -->
+                <span class="article-topic" th:if="${article.topic != null and article.topic != ''}">
+                    <span th:text="${topic}">#话题</span>
+                </span>
+
+                <!-- 标题 -->
+                <h3 class="article-title" th:text="${article.title}">文章标题</h3>
+
+                <!-- 摘要 -->
+                <p class="article-excerpt" th:if="${article.content != null}">
+                    <span th:text="${#strings.length(article.content) > 100 ? #strings.substring(article.content, 0, 100) + '...' : article.content}">文章摘要...</span>
+                </p>
+
+                <!-- 元信息 -->
+                <div class="article-meta">
+                    <div class="article-author">
+                        <div class="author-avatar" th:text="${article.userId != null ? #strings.substring(#strings.toString(article.userId), 0, 1) : '?'}">?</div>
+                        <span>作者ID: <span th:text="${article.userId}">123</span></span>
+                    </div>
+                    <div class="article-stats">
+                        <span class="stat-item">👁️ <span th:text="${article.viewCount != null ? article.viewCount : 0}">0</span></span>
+                        <span class="stat-item" th:if="${article.publishedAt != null}">
+                            🕐 <span th:text="${#temporals.format(article.publishedAt, 'MM-dd')}">01-01</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 管理操作按钮（仅作者或管理员可见） -->
+            <div sec:authorize="isAuthenticated()"
+                 th:if="${article.isOwner or #authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                 style="padding: 12px; background: #f8f9fa; border-top: 1px solid #e0e0e0; display: flex; gap: 8px;"
+                 onclick="event.stopPropagation();">
+                
+                <a th:href="@{/articles/edit/{id}(id=${article.id})}"
+                   style="flex: 1; text-align: center; padding: 8px; background: #007bff; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; transition: all 0.3s;"
+                   onmouseover="this.style.background='#0056b3'"
+                   onmouseout="this.style.background='#007bff'"
+                   onclick="event.stopPropagation();">
+                    ✏️ 编辑
+                </a>
+                
+                <form th:action="@{/articles/delete/{id}(id=${article.id})}"
+                      method="post"
+                      style="flex: 1; margin: 0;"
+                      onclick="event.stopPropagation();">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit"
+                            style="width: 100%; padding: 8px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.3s;"
+                            onmouseover="this.style.background='#c82333'"
+                            onmouseout="this.style.background='#dc3545'"
+                            onclick="return confirm('确定要删除这篇文章吗？此操作不可撤销！');">
+                        🗑️ 删除
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div th:if="${articles == null or articles.isEmpty()}" class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h2 class="empty-title">暂无笔记</h2>
+        <p>敬请期待更多精彩内容</p>
+    </div>
+
+    <!-- 分页导航 -->
+    <div th:if="${page != null and page.total > 0}" style="margin-top: 40px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+        <!-- 上一页 -->
+        <a th:if="${page.hasPrevious()}"
+           th:href="@{/articles(pageNum=${page.current - 1}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+           style="padding: 10px 20px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none; color: #333; transition: all 0.3s;"
+           onmouseover="this.style.background='#f8f9fa'; this.style.borderColor='#667eea'"
+           onmouseout="this.style.background='white'; this.style.borderColor='#e0e0e0'">
+            ← 上一页
+        </a>
+
+        <!-- 页码信息 -->
+        <span style="color: #666; font-size: 14px;">
+            第 <strong th:text="${page.current}" style="color: #667eea;">1</strong> /
+            <strong th:text="${page.pages}">1</strong> 页，
+            共 <strong th:text="${page.total}">0</strong> 篇
+        </span>
+
+        <!-- 下一页 -->
+        <a th:if="${page.hasNext()}"
+           th:href="@{/articles(pageNum=${page.current + 1}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+           style="padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; text-decoration: none; transition: all 0.3s;"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            下一页 →
+        </a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ 种草笔记页面加载完成');
+
+        // 统计文章数量
+        const articles = document.querySelectorAll('.article-card');
+        console.log(`📊 当前显示 ${articles.length} 篇笔记`);
+        
+        // 为每个卡片添加点击统计
+        articles.forEach((card, index) => {
+            card.addEventListener('click', function(e) {
+                console.log(`👆 点击第 ${index + 1} 篇笔记`);
+            });
+        });
+    });
+
+    // ============================================
+    // 批量操作功能
+    // ============================================
+
+    /**
+     * 全选/取消全选
+     */
+    function toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const cardCheckboxes = document.querySelectorAll('.card-checkbox');
+
+        cardCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+
+        updateSelectedCount();
+    }
+
+    /**
+     * 更新已选择数量
+     */
+    function updateSelectedCount() {
+        const selectedCheckboxes = document.querySelectorAll('.card-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        const countElement = document.getElementById('selectedCount');
+        const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+        const batchDownloadBtn = document.getElementById('batchDownloadBtn');
+
+        if (countElement) {
+            countElement.textContent = count;
+        }
+
+        if (batchDeleteBtn) {
+            batchDeleteBtn.disabled = count === 0;
+        }
+
+        if (batchDownloadBtn) {
+            batchDownloadBtn.disabled = count === 0;
+        }
+
+        // 如果所有复选框都被选中，则勾选"全选"
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const allCheckboxes = document.querySelectorAll('.card-checkbox');
+        if (selectAllCheckbox && allCheckboxes.length > 0) {
+            selectAllCheckbox.checked = count === allCheckboxes.length;
+        }
+    }
+
+    /**
+     * 批量删除文章
+     */
+    function batchDeleteArticles() {
+        const selectedCheckboxes = document.querySelectorAll('.card-checkbox:checked');
+
+        if (selectedCheckboxes.length === 0) {
+            alert('请先选择要删除的文章！');
+            return;
+        }
+
+        const articleIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        if (!confirm(`确定要删除选中的 ${articleIds.length} 篇文章吗？\n\n此操作不可撤销！`)) {
+            return;
+        }
+
+        console.log(`🗑️ [批量删除] 准备删除 ${articleIds.length} 篇文章:`, articleIds);
+
+        fetch('/articles/batch-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ids: articleIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ [批量删除] 响应:', data);
+
+            if (data.success) {
+                alert(`成功删除 ${data.deletedCount || articleIds.length} 篇文章！`);
+                location.reload();
+            } else {
+                alert('删除失败：' + (data.message || '未知错误'));
+            }
+        })
+        .catch(error => {
+            console.error('❌ [批量删除] 错误:', error);
+            alert('删除失败，请重试！');
+        });
+    }
+
+    /**
+     * 批量下载文章（导出为JSON文件）
+     */
+    function batchDownloadArticles() {
+        const selectedCheckboxes = document.querySelectorAll('.card-checkbox:checked');
+
+        if (selectedCheckboxes.length === 0) {
+            alert('请先选择要下载的文章！');
+            return;
+        }
+
+        const articleIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+
+        console.log(`📥 [批量下载] 准备下载 ${articleIds.length} 篇文章:`, articleIds);
+
+        fetch('/articles/batch-download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ids: articleIds })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络错误');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.download = `articles_${dateStr}_${articleIds.length}篇.json`;
+
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            console.log(`✅ [批量下载] 成功下载 ${articleIds.length} 篇文章`);
+            alert(`成功下载 ${articleIds.length} 篇文章！`);
+        })
+        .catch(error => {
+            console.error('❌ [批量下载] 错误:', error);
+            alert('下载失败，请重试！');
+        });
+    }
+</script>
+
+</body>
+</html>

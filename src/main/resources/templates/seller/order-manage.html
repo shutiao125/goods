@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卖家后台 - 订单管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 5px 15px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* 筛选区域 */
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-select,
+        .form-input {
+            padding: 10px 14px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 表格 */
+        .data-table-wrapper {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 14px;
+        }
+
+        .data-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-0 { background: #fff3cd; color: #856404; }
+        .status-1 { background: #cce5ff; color: #004085; }
+        .status-2 { background: #d4edda; color: #155724; }
+        .status-3 { background: #e2e3e5; color: #383d41; }
+        .status-4 { background: #f8d7da; color: #721c24; }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-right: 8px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #adb5bd;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            color: #6c757d;
+        }
+
+        /* 发货弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .modal-form-select,
+        .modal-form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 28px;
+        }
+
+        .modal-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .modal-btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        /* 分页 */
+        .pagination-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pagination-link {
+            padding: 10px 18px;
+            border: 1.5px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .pagination-link:hover:not(.disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-1px);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .data-table {
+                font-size: 12px;
+            }
+            .data-table th,
+            .data-table td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">🏪 卖家中心</div>
+            <div class="user-info" th:text="${currentUser != null ? currentUser.username : '卖家'}">卖家账号</div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/seller/dashboard" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    <span>仪表盘</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/seller/goods" class="nav-link">
+                    <span class="nav-icon">📦</span>
+                    <span>商品管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/seller/goods/publish" class="nav-link">
+                    <span class="nav-icon">➕</span>
+                    <span>发布商品</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/seller/orders" class="nav-link active">
+                    <span class="nav-icon">📋</span>
+                    <span>订单管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/" class="nav-link">
+                    <span class="nav-icon">🏠</span>
+                    <span>返回前台</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/logout" class="nav-link">
+                    <span class="nav-icon">🚪</span>
+                    <span>退出登录</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">📋 订单管理</h1>
+        </div>
+
+        <!-- 筛选区域（照搬管理后台） -->
+        <div class="filter-section">
+            <div class="form-group">
+                <label class="form-label">订单状态：</label>
+                <select class="form-select" id="statusFilter" onchange="applyFilter()">
+                    <option value="" th:selected="${status == null}">全部状态</option>
+                    <option value="0" th:selected="${status == 0}">待付款</option>
+                    <option value="1" th:selected="${status == 1}">待发货</option>
+                    <option value="2" th:selected="${status == 2}">已发货</option>
+                    <option value="3" th:selected="${status == 3}">已完成</option>
+                    <option value="4" th:selected="${status == 4}">已取消</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text"
+                       class="form-input"
+                       id="keywordInput"
+                       placeholder="搜索订单号/收货人"
+                       th:value="${keyword}"
+                       onkeypress="if(event.key==='Enter') applyFilter()">
+            </div>
+            <button class="btn-primary" onclick="applyFilter()">🔍 搜索</button>
+        </div>
+
+        <!-- 数据表格（照搬管理后台，真实数据展示） -->
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>买家信息</th>
+                    <th>商品金额</th>
+                    <th>状态</th>
+                    <th>下单时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orderPage.records}">
+                    <td>
+                        <code style="font-size: 13px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px;" th:text="${order.orderNo}">-</code>
+                    </td>
+                    <td>
+                        <div style="font-weight: 500; color: #333;" th:text="${order.receiverName}">-</div>
+                        <div style="font-size: 12px; color: #999; margin-top: 4px;" th:text="${order.receiverPhone}"></div>
+                    </td>
+                    <td style="color: #dc3545; font-weight: bold; font-size: 16px;" th:text="'¥' + ${order.payAmount}">¥0.00</td>
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="'status-' + ${order.status}"
+                              th:switch="${order.status}">
+                            <span th:case="0">待付款</span>
+                            <span th:case="1">待发货</span>
+                            <span th:case="2">已发货</span>
+                            <span th:case="3">已完成</span>
+                            <span th:case="*">已取消</span>
+                        </span>
+                    </td>
+                    <td style="font-size: 13px; color: #6c757d;" th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                    <td>
+                        <!-- 待付款状态：显示提示 -->
+                        <th:block th:if="${order.status == 0}">
+                            <span class="action-btn"
+                                  style="background: #ffc107; color: white; cursor: default;">
+                                等待付款
+                            </span>
+                        </th:block>
+
+                        <!-- 待发货状态：显示发货按钮 -->
+                        <th:block th:if="${order.status == 1}">
+                            <button class="action-btn btn-success"
+                                    onclick="showShipModal(this.getAttribute('data-id'))"
+                                    th:data-id="${order.id}">
+                                🚚 发货
+                            </button>
+                        </th:block>
+
+                        <!-- 已发货状态：显示完成按钮 -->
+                        <th:block th:if="${order.status == 2}">
+                            <button class="action-btn btn-success"
+                                    style="background: #17a2b8;"
+                                    onclick="completeOrder(this.getAttribute('data-id'))"
+                                    th:data-id="${order.id}">
+                                ✅ 完成订单
+                            </button>
+                        </th:block>
+
+                        <!-- 已完成/已取消状态：显示状态标签 -->
+                        <th:block th:if="${order.status == 3 or order.status == 4}">
+                            <span class="action-btn"
+                                  style="background: #6c757d; color: white; cursor: default;"
+                                  th:text="${order.status == 3} ? '已完成' : '已取消'">
+                                -
+                            </span>
+                        </th:block>
+                    </td>
+                </tr>
+
+                <!-- 空状态 -->
+                <tr th:if="${orderPage == null or orderPage.records == null or #lists.isEmpty(orderPage.records)}">
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <div class="empty-text">暂无订单数据</div>
+                            <div style="margin-top: 8px; font-size: 14px;">当有客户购买您的商品后，订单将显示在这里</div>
+                            <br>
+                            <a href="/seller/goods/publish" class="btn-primary" style="margin-top: 15px;">
+                                ➕ 发布更多商品吸引客户
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页（照搬管理后台） -->
+        <th:block th:if="${orderPage != null and orderPage.pages > 1}">
+            <div class="pagination-wrapper">
+                <a th:if="${orderPage.hasPrevious()}"
+                   th:href="@{/seller/orders(pageNum=${orderPage.current - 1}, status=${status}, keyword=${keyword})}"
+                   class="pagination-link">上一页</a>
+                <span class="pagination-info" th:text="'第 ' + ${orderPage.current} + ' 页 / 共 ' + ${orderPage.pages} + ' 页'">1/1</span>
+                <a th:if="${orderPage.hasNext()}"
+                   th:href="@{/seller/orders(pageNum=${orderPage.current + 1}, status=${status}, keyword=${keyword})}"
+                   class="pagination-link">下一页</a>
+            </div>
+        </th:block>
+    </main>
+</div>
+
+<!-- 发货弹窗（完全照搬管理后台） -->
+<div id="shipModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <h2 class="modal-title">🚚 订单发货</h2>
+        <div style="margin-bottom: 20px; padding: 12px; background: #f8f9fa; border-radius: 6px; font-size: 14px; color: #666;">
+            <strong>📦 订单ID：</strong><span id="shipOrderIdDisplay"></span>
+        </div>
+        <div class="modal-form-group">
+            <label class="modal-form-label">🏢 物流公司 <span style="color: #dc3545;">*</span></label>
+            <select class="modal-form-select" id="expressCompany">
+                <option value="">请选择物流公司</option>
+                <optgroup label="主流快递">
+                    <option value="顺丰速运">顺丰速运</option>
+                    <option value="京东物流">京东物流</option>
+                    <option value="邮政EMS">邮政EMS</option>
+                </optgroup>
+                <optgroup label="其他快递">
+                    <option value="中通快递">中通快递</option>
+                    <option value="圆通快递">圆通快递</option>
+                    <option value="韵达快递">韵达快递</option>
+                    <option value="申通快递">申通快递</option>
+                    <option value="百世快递">百世快递</option>
+                    <option value="极兔速递">极兔速递</option>
+                    <option value="德邦快递">德邦快递</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="modal-form-group">
+            <label class="modal-form-label">📋 快递单号 <span style="color: #dc3545;">*</span></label>
+            <input type="text" class="modal-form-input" id="expressNo" placeholder="请输入快递单号（例如：SF1234567890）">
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" onclick="closeShipModal()">取消</button>
+            <button class="modal-btn modal-btn-primary" onclick="submitShip()">✅ 确认发货</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let currentOrderId = null;
+
+    // 应用筛选条件
+    function applyFilter() {
+        const status = document.getElementById('statusFilter').value;
+        const keyword = document.getElementById('keywordInput').value;
+        let url = '/seller/orders?';
+        if (status) url += '&status=' + status;
+        if (keyword) url += '&keyword=' + encodeURIComponent(keyword);
+        window.location.href = url;
+    }
+
+    // 打开发货弹窗
+    function showShipModal(orderId) {
+        currentOrderId = orderId;
+        document.getElementById('shipModal').classList.add('show');
+        document.getElementById('expressNo').value = '';
+        document.getElementById('expressCompany').selectedIndex = 0;
+        document.getElementById('shipOrderIdDisplay').textContent = orderId;
+
+        console.log('📦 [卖家后台] 打开发货弹窗, 订单ID:', orderId);
+    }
+
+    // 关闭发货弹窗
+    function closeShipModal() {
+        document.getElementById('shipModal').classList.remove('show');
+        currentOrderId = null;
+        console.log('❌ [卖家后台] 关闭发货弹窗');
+    }
+
+    // 提交发货（调用卖家专属的发货API）
+    function submitShip() {
+        const expressCompany = document.getElementById('expressCompany').value;
+        const expressNo = document.getElementById('expressNo').value.trim();
+
+        console.log('📤 [卖家后台] 提交发货信息:');
+        console.log('   - 订单ID:', currentOrderId);
+        console.log('   - 物流公司:', expressCompany);
+        console.log('   - 快递单号:', expressNo);
+
+        // 表单验证
+        if (!expressCompany) {
+            alert('⚠️ 请选择物流公司');
+            document.getElementById('expressCompany').focus();
+            return;
+        }
+
+        if (!expressNo) {
+            alert('⚠️ 请输入快递单号');
+            document.getElementById('expressNo').focus();
+            return;
+        }
+
+        // 验证快递单号格式
+        if (expressNo.length < 5 || expressNo.length > 30) {
+            alert('⚠️ 快递单号长度应在5-30个字符之间');
+            document.getElementById('expressNo').focus();
+            return;
+        }
+
+        console.log('🚀 [卖家后台] 调用卖家专属发货API: /seller/orders/ship');
+
+        // 调用卖家专属的发货API（避免CSRF问题）
+        fetch('/seller/orders/ship', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `orderId=${currentOrderId}&expressCompany=${encodeURIComponent(expressCompany)}&expressNo=${encodeURIComponent(expressNo)}`
+        })
+            .then(response => {
+                console.log('✅ [卖家后台] 发货响应状态:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('HTTP ' + response.status + '\n\n' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 [卖家后台] 发货结果:', data);
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeShipModal();
+                    location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('❌ [卖家后台] 发货异常:', error);
+                alert('❌ 发货失败：' + error.message);
+            });
+    }
+
+    // 完成订单
+    function completeOrder(orderId) {
+        if (!confirm('✅ 确定要将该订单标记为已完成吗？')) {
+            return;
+        }
+
+        console.log('🎉 [卖家后台] 完成订单, orderId:', orderId);
+
+        fetch('/seller/orders/' + orderId + '/complete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(response => {
+                console.log('✅ [卖家后台] 完成订单响应状态:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('HTTP ' + response.status + '\n\n' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('🎉 [卖家后台] 完成订单结果:', data);
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    location.reload();
+                } else {
+                    alert('❌ 操作失败：' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('❌ [卖家后台] 完成订单异常:', error);
+                alert('❌ 完成订单失败：' + error.message);
+            });
+    }
+
+    // 获取CSRF Token
+    function getCsrfToken() {
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${article.title} + ' - 种草笔记'">文章详情</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* 文章头部 */
+        .article-header {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .article-topic-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            color: #667eea;
+            padding: 6px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .article-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .article-meta-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-avatar-large {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .author-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .publish-time {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .view-count {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #999;
+        }
+
+        /* 封面图 */
+        .article-cover-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .cover-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* 文章内容 */
+        .article-content-body {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            line-height: 1.8;
+            font-size: 16px;
+            color: #444;
+        }
+
+        .article-content-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .article-content-body p {
+            margin-bottom: 16px;
+        }
+
+        /* 推荐商品区域 */
+        .recommended-goods-section {
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .goods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        /* 商品卡片 */
+        .goods-card {
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .goods-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.15);
+        }
+
+        .goods-image-wrapper {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            overflow: hidden;
+        }
+
+        .goods-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .goods-info {
+            padding: 15px;
+        }
+
+        .goods-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .goods-price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .goods-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e74c3c;
+        }
+
+        .buy-btn {
+            padding: 6px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .buy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .no-goods {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .no-goods-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .article-title {
+                font-size: 24px;
+            }
+            
+            .article-header,
+            .article-content-body,
+            .recommended-goods-section {
+                padding: 25px;
+            }
+            
+            .goods-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/articles" class="back-btn">
+            ← 返回笔记列表
+        </a>
+        <div class="nav-links">
+            <a href="/goods/list" class="nav-link">🛍️ 商品</a>
+            <a href="/cart" class="nav-link">🛒 购物车</a>
+            <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 10px; margin-left: 15px;">
+                <span style="color: rgba(255,255,255,0.9); font-size: 13px;">👤 <span th:text="${#authentication.name}">用户</span></span>
+                <a href="/logout" class="nav-link" style="padding: 5px 12px; background: rgba(255,255,255,0.2); border-radius: 15px; font-size: 12px;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">🚪 退出</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 主容器 -->
+<div class="container">
+    
+    <!-- 文章头部 -->
+    <div class="article-header" th:if="${article != null}">
+        <!-- 话题标签 -->
+        <span class="article-topic-tag" th:if="${article.topic != null and article.topic != ''}">
+            📌 <span th:text="${article.topic}">#话题</span>
+        </span>
+
+        <!-- 标题 -->
+        <h1 class="article-title" th:text="${article.title}">文章标题</h1>
+
+        <!-- 元信息 -->
+        <div class="article-meta-info">
+            <!-- 作者信息 -->
+            <div class="author-info" th:if="${author != null}">
+                <div class="author-avatar-large" th:text="${#strings.toUpperCase(#strings.substring(author.username, 0, 1))}">?</div>
+                <div class="author-details">
+                    <span class="author-name" th:text="${author.username}">作者名</span>
+                    <span class="publish-time" th:if="${article.publishedAt != null}" th:text="'发布于 ' + ${#temporals.format(article.publishedAt, 'yyyy-MM-dd HH:mm')}">发布时间</span>
+                </div>
+            </div>
+
+            <!-- 浏览量 -->
+            <div class="view-count" th:if="${article.viewCount != null}">
+                👁️ <span th:text="${article.viewCount}">0</span> 次浏览
+            </div>
+        </div>
+    </div>
+
+    <!-- 封面图 -->
+    <div class="article-cover-section" th:if="${article.coverImage != null and article.coverImage != ''}">
+        <img th:src="${article.coverImage.startsWith('http') ? article.coverImage : '/img/' + article.coverImage}"
+             alt="封面图"
+             class="cover-image"
+             onerror="this.parentElement.style.display='none'">
+    </div>
+
+    <!-- 文章正文 -->
+    <div class="article-content-body" th:if="${article.content != null}">
+        <div th:utext="${article.content}">文章内容...</div>
+    </div>
+
+    <!-- 推荐商品区域 -->
+    <div class="recommended-goods-section" th:if="${relatedGoods != null and !relatedGoods.isEmpty()}">
+        <h2 class="section-title">
+            🛍️ 相关好物推荐
+        </h2>
+        <p class="section-subtitle">笔记中提到的商品，点击即可查看详情并购买</p>
+
+        <div class="goods-grid">
+            <div th:each="goods : ${relatedGoods}"
+               class="goods-card"
+               th:onclick="|window.location.href='/goods/${goods.id}'|"
+               style="cursor: pointer;">
+                
+                <!-- 商品图片 -->
+                <div class="goods-image-wrapper">
+                    <img th:if="${goods.mainImage != null and goods.mainImage != '' and goods.mainImage.contains('.')}"
+                         th:src="${goods.mainImage.startsWith('http') ? goods.mainImage : (goods.mainImage.startsWith('/') ? goods.mainImage : '/uploads/' + goods.mainImage)}"
+                         alt=""
+                         onerror="this.style.display='none'"
+                         style="width: 100%; height: 100%; object-fit: cover;">
+                    <span th:unless="${goods.mainImage != null and goods.mainImage != '' and goods.mainImage.contains('.')}" style="font-size: 48px;">📦</span>
+                </div>
+
+                <!-- 商品信息 -->
+                <div class="goods-info">
+                    <h3 class="goods-name" th:text="${goods.name}">商品名称</h3>
+                    
+                    <div class="goods-price-row">
+                        <span class="goods-price">¥<span th:text="${goods.price}">0.00</span></span>
+                        <span class="buy-btn">立即购买 →</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 无推荐商品提示 -->
+    <div class="recommended-goods-section" th:if="${relatedGoods == null or relatedGoods.isEmpty()}">
+        <div class="no-goods">
+            <div class="no-goods-icon">📦</div>
+            <p style="font-size: 16px; color: #666;">暂无关联商品</p>
+            <p style="margin-top: 8px; font-size: 14px; color: #999;">该笔记暂未推荐相关商品</p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 💬 文章评论区 -->
+    <!-- ============================================ -->
+    <div class="comments-section" style="margin-top: 50px; padding: 30px; background: linear-gradient(135deg, #f8f9ff, #fff5f8); border-radius: 16px; border: 2px solid #e8f0fe;">
+        
+        <h3 style="font-size: 22px; color: #1a73e8; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+            💬 评论区
+            <span id="commentCount" style="font-size: 14px; font-weight: normal; color: #666;">加载中...</span>
+        </h3>
+
+        <!-- 发表评论表单 -->
+        <div id="commentForm" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <div sec:authorize="isAuthenticated()">
+                <textarea id="commentContent"
+                          rows="4"
+                          placeholder="写下你的想法..."
+                          style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px;
+                                 resize: vertical; font-size: 14px; font-family: inherit;
+                                 transition: all 0.3s;"
+                          onfocus="this.style.borderColor='#667eea'"
+                          onblur="this.style.borderColor='#e0e0e0'"></textarea>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                    <button onclick="submitComment()"
+                            style="padding: 10px 28px; background: linear-gradient(135deg, #667eea, #764ba2);
+                                   color: white; border: none; border-radius: 25px; cursor: pointer;
+                                   font-size: 14px; font-weight: 600; transition: all 0.3s;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.4)'"
+                            onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                        📝 发表评论
+                    </button>
+                    <span id="replyToInfo" style="color: #999; font-size: 13px;"></span>
+                </div>
+            </div>
+
+            <div sec:authorize="!isAuthenticated()" style="text-align: center; padding: 20px; color: #999;">
+                <p>🔒 请 <a href="/toLoginPage" style="color: #667eea; text-decoration: none; font-weight: 600;">登录</a> 后发表评论</p>
+            </div>
+        </div>
+
+        <!-- 评论列表容器 -->
+        <div id="commentsList" style="background: white; border-radius: 12px; overflow: hidden;">
+            <!-- 动态加载评论内容 -->
+            <div style="text-align: center; padding: 40px; color: #999;">
+                <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                <p>暂无评论，快来抢沙发吧！</p>
+            </div>
+        </div>
+
+        <!-- 加载更多按钮 -->
+        <div id="loadMoreComments" style="display: none; text-align: center; margin-top: 15px;">
+            <button onclick="loadComments(currentPage + 1)"
+                    style="padding: 10px 30px; background: white; border: 2px solid #667eea;
+                           color: #667eea; border-radius: 25px; cursor: pointer; font-weight: 600;
+                           transition: all 0.3s;"
+                    onmouseover="this.style.background='#667eea'; this.style.color='white'"
+                    onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                加载更多评论 ↓
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var articleId = [[${article.id}]];
+    /*]]>*/
+    
+    // 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ 文章详情页加载完成');
+        
+        console.log('📝 当前文章ID: ' + articleId);
+        
+        // 统计推荐商品数量
+        const goodsCards = document.querySelectorAll('.goods-card');
+        console.log(`🛍️ 当前显示 ${goodsCards.length} 个推荐商品`);
+        
+        // 为每个商品卡片添加点击统计
+        goodsCards.forEach((card, index) => {
+            card.addEventListener('click', function(e) {
+                console.log(`👆 点击第 ${index + 1} 个推荐商品`);
+                
+                const goodsName = this.querySelector('.goods-name').textContent;
+                console.log(`   商品名称: ${goodsName}`);
+            });
+        });
+        
+        // 返回按钮统计
+        const backBtn = document.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                console.log('⬅️ 返回笔记列表');
+            });
+        }
+    });
+
+    // 格式化文章内容（如果需要）
+    function formatContent(content) {
+        if (!content) return '';
+
+        // 简单的Markdown转HTML处理
+        content = content.replace(/\n/g, '<br>');
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        return content;
+    }
+
+    // ============================================
+    // 💬 文章评论功能
+    // ============================================
+
+    let currentPage = 1;
+    const pageSize = 10;
+    let replyingTo = null; // 当前回复的评论ID
+    let totalPages = 0;
+    let currentUsername = [[${#authentication != null ? #authentication.name : ''}]]; // 当前登录用户名
+    let isAdmin = [[${#authorization.expr('hasRole(''ROLE_ADMIN'')')}]] || false; // 是否是管理员
+
+    // 页面加载时获取评论
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log(`💬 [评论] 当前用户: ${currentUsername || '未登录'}, 管理员: ${isAdmin}`);
+        loadComments(1);
+    });
+
+    /**
+     * 加载评论列表
+     */
+    async function loadComments(page) {
+        try {
+            console.log(`📋 [评论] 加载第 ${page} 页评论...`);
+
+            const response = await fetch(`/articles/${articleId}/comments?pageNum=${page}&pageSize=${pageSize}`);
+            const result = await response.json();
+
+            if (result.success) {
+                currentPage = page;
+                totalPages = result.pages || 0;
+
+                // 更新评论数量显示
+                document.getElementById('commentCount').textContent =
+                    `共 ${result.total} 条评论`;
+
+                // 渲染评论列表
+                renderComments(result.data);
+
+                // 显示/隐藏加载更多按钮
+                const loadMoreBtn = document.getElementById('loadMoreComments');
+                loadMoreBtn.style.display = currentPage < totalPages ? 'block' : 'none';
+
+                console.log(`✅ [评论] 加载成功: 总数=${result.total}, 本页=${result.data.length}, 总页数=${totalPages}`);
+            } else {
+                console.error('❌ [评论] 加载失败:', result.message);
+            }
+        } catch (error) {
+            console.error('❌ [评论] 请求异常:', error);
+        }
+    }
+
+    /**
+     * 渲染评论列表
+     */
+    function renderComments(comments) {
+        const container = document.getElementById('commentsList');
+
+        if (!comments || comments.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                    <p>暂无评论，快来抢沙发吧！</p>
+                </div>
+            `;
+            return;
+        }
+
+        // 分离父评论和子评论
+        const parentComments = comments.filter(c => !c.parentId || c.parentId === 0);
+        const childComments = comments.filter(c => c.parentId && c.parentId > 0);
+
+        // 构建子评论映射：parentId -> [子评论列表]
+        const childrenMap = {};
+        childComments.forEach(child => {
+            if (!childrenMap[child.parentId]) {
+                childrenMap[child.parentId] = [];
+            }
+            childrenMap[child.parentId].push(child);
+        });
+
+        console.log(`📊 [评论] 父评论: ${parentComments.length}条, 子评论: ${childComments.length}条`);
+
+        container.innerHTML = parentComments.map(comment => `
+            <div class="comment-item" id="comment-${comment.id}"
+                 style="padding: 20px; border-bottom: 1px solid #f0f0f0;"
+                 onmouseenter="this.style.background='#f8f9ff'"
+                 onmouseleave="this.style.background='white'">
+                <div style="display: flex; gap: 15px;">
+                    <div style="width: 45px; height: 45px; border-radius: 50%;
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        display: flex; align-items: center; justify-content: center;
+                        color: white; font-weight: bold; font-size: 18px; flex-shrink: 0;">
+                        ${comment.username ? comment.username.charAt(0).toUpperCase() : '?'}
+                    </div>
+
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: #333; font-size: 15px;">${comment.username || '匿名用户'}</strong>
+                            <span style="color: #999; font-size: 12px;">
+                                ${formatTime(comment.createdAt)}
+                            </span>
+                        </div>
+
+                        <p style="color: #555; line-height: 1.6; margin-bottom: 12px; font-size: 14px;">
+                            ${escapeHtml(comment.content)}
+                        </p>
+
+                        <div style="display: flex; gap: 15px; font-size: 13px;">
+                            <button onclick="replyToComment(${comment.id}, '${escapeHtml(comment.username)}')"
+                                    style="background: none; border: none; color: #667eea; cursor: pointer;
+                                           padding: 5px 12px; border-radius: 15px; transition: all 0.3s;"
+                                    onmouseover="this.style.background='#667eea15'"
+                                    onmouseout="this.style.background='none'">
+                                💬 回复
+                            </button>
+
+                            ${(currentUsername && currentUsername === comment.username) || isAdmin ? `
+                            <button onclick="deleteComment(${comment.id})"
+                                    style="background: none; border: none; color: #dc3545; cursor: pointer;
+                                           padding: 5px 12px; border-radius: 15px; transition: all 0.3s;"
+                                    onmouseover="this.style.background='#dc354515'"
+                                    onmouseout="this.style.background='none'">
+                                🗑️ 删除
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 子评论（回复）区域 -->
+                ${childrenMap[comment.id] && childrenMap[comment.id].length > 0 ? `
+                <div style="margin-left: 60px; margin-top: 15px; padding-left: 18px; border-left: 3px solid #e8f0fe;">
+                    ${childrenMap[comment.id].map(reply => `
+                        <div class="reply-item" id="comment-${reply.id}"
+                             style="padding: 12px 0; border-bottom: 1px solid #f8f9fa;"
+                             onmouseenter="this.style.background='#fafbff'"
+                             onmouseleave="this.style.background='transparent'">
+                            <div style="display: flex; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%;
+                                    background: linear-gradient(135deg, #a78bfa, #ec4899);
+                                    display: flex; align-items: center; justify-content: center;
+                                    color: white; font-weight: bold; font-size: 13px; flex-shrink: 0;">
+                                    ${reply.username ? reply.username.charAt(0).toUpperCase() : '?'}
+                                </div>
+
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                        <strong style="color: #333; font-size: 13px;">${reply.username || '匿名用户'}</strong>
+                                        <span style="color: #999; font-size: 11px;">回复</span>
+                                        <strong style="color: #667eea; font-size: 13px;">@${escapeHtml(comment.username)}</strong>
+                                        <span style="color: #ccc; margin: 0 4px;">·</span>
+                                        <span style="color: #999; font-size: 11px;">${formatTime(reply.createdAt)}</span>
+                                    </div>
+
+                                    <p style="color: #555; line-height: 1.6; margin-bottom: 8px; font-size: 13px;">
+                                        ${escapeHtml(reply.content)}
+                                    </p>
+
+                                    <div style="display: flex; gap: 12px; font-size: 12px;">
+                                        <button onclick="replyToComment(${comment.id}, '${escapeHtml(comment.username)}')"
+                                                style="background: none; border: none; color: #667eea; cursor: pointer;
+                                                       padding: 4px 10px; border-radius: 12px; transition: all 0.3s;"
+                                                onmouseover="this.style.background='#667eea15'"
+                                                onmouseout="this.style.background='none'">
+                                            💬 回复
+                                        </button>
+
+                                        ${(currentUsername && currentUsername === reply.username) || isAdmin ? `
+                                        <button onclick="deleteComment(${reply.id})"
+                                                style="background: none; border: none; color: #dc3545; cursor: pointer;
+                                                       padding: 4px 10px; border-radius: 12px; transition: all 0.3s;"
+                                                onmouseover="this.style.background='#dc354515'"
+                                                onmouseout="this.style.background='none'">
+                                            🗑️ 删除
+                                        </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    /**
+     * 发表评论
+     */
+    async function submitComment() {
+        const contentInput = document.getElementById('commentContent');
+        const content = contentInput.value.trim();
+
+        if (!content) {
+            alert('请输入评论内容');
+            return;
+        }
+
+        if (content.length > 500) {
+            alert('评论内容不能超过500字');
+            return;
+        }
+
+        try {
+            console.log(`💬 [评论] 发表评论...`);
+
+            const response = await fetch(`/articles/${articleId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `content=${encodeURIComponent(content)}${replyingTo ? '&parentId=' + replyingTo : ''}`
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ 评论发表成功！');
+                contentInput.value = '';
+                cancelReply();
+                loadComments(1); // 刷新评论列表
+
+                console.log(`✅ [评论] 发表成功: ID=${result.commentId}`);
+            } else {
+                alert('❌ ' + result.message);
+                console.error('❌ [评论] 发表失败:', result.message);
+            }
+        } catch (error) {
+            console.error('❌ [评论] 发表异常:', error);
+            alert('❌ 网络错误，请重试');
+        }
+    }
+
+    /**
+     * 回复评论
+     */
+    function replyToComment(commentId, username) {
+        replyingTo = commentId;
+
+        const replyInfo = document.getElementById('replyToInfo');
+        replyInfo.innerHTML = `↩️ 回复 <strong>${username}</strong>
+                               <span onclick="cancelReply()"
+                                     style="cursor: pointer; color: #dc3545; margin-left: 8px; font-weight: bold;">×</span>`;
+
+        const contentInput = document.getElementById('commentContent');
+        contentInput.focus();
+        contentInput.placeholder = `回复 ${username}...`;
+
+        console.log(`💬 [评论] 准备回复: 用户=${username}, 评论ID=${commentId}`);
+
+        // 滚动到评论框
+        document.getElementById('commentForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /**
+     * 取消回复
+     */
+    function cancelReply() {
+        replyingTo = null;
+
+        const replyInfo = document.getElementById('replyToInfo');
+        replyInfo.innerHTML = '';
+
+        const contentInput = document.getElementById('commentContent');
+        contentInput.placeholder = '写下你的想法...';
+    }
+
+    /**
+     * 删除评论
+     */
+    async function deleteComment(commentId) {
+        if (!confirm('确定要删除这条评论吗？')) {
+            return;
+        }
+
+        try {
+            console.log(`🗑️ [评论] 删除评论: ID=${commentId}`);
+
+            const response = await fetch(`/articles/${articleId}/comments/${commentId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ 评论删除成功');
+
+                // 从DOM中移除该评论元素
+                const commentElement = document.getElementById(`comment-${commentId}`);
+                if (commentElement) {
+                    commentElement.style.animation = 'fadeOut 0.3s ease-out forwards';
+                    setTimeout(() => {
+                        commentElement.remove();
+                        // 更新评论计数
+                        const countEl = document.getElementById('commentCount');
+                        const currentCount = parseInt(countEl.textContent.match(/\d+/)[0]);
+                        countEl.textContent = `共 ${currentCount - 1} 条评论`;
+                    }, 300);
+                }
+
+                console.log(`✅ [评论] 删除成功: ID=${commentId}`);
+            } else {
+                alert('❌ ' + result.message);
+            }
+        } catch (error) {
+            console.error('❌ [评论] 删除异常:', error);
+            alert('❌ 删除失败，请重试');
+        }
+    }
+
+    /**
+     * 格式化时间
+     */
+    function formatTime(dateStr) {
+        if (!dateStr) return '';
+
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = now - date;
+
+        // 小于1分钟
+        if (diff < 60000) return '刚刚';
+
+        // 小于1小时
+        if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+
+        // 小于24小时
+        if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+
+        // 小于30天
+        if (diff < 2592000000) return Math.floor(diff / 86400000) + '天前';
+
+        // 显示完整日期
+        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    }
+
+    /**
+     * HTML转义（防止XSS攻击）
+     */
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 添加淡出动画样式
+    const commentStyle = document.createElement('style');
+    commentStyle.textContent = `
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-20px); }
+        }
+    `;
+    document.head.appendChild(commentStyle);
+
+    console.log('💬 [评论] 评论系统初始化完成');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>商品详情</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .back-link {
+            color: #495057;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #212529;
+        }
+
+        .back-link::before {
+            content: '←';
+            font-size: 18px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .detail-wrapper {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            overflow: hidden;
+        }
+
+        .detail-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .image-section {
+            padding: 40px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .main-image {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .info-section {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .goods-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            width: fit-content;
+        }
+
+        .status-on {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-off {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-out {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .goods-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .goods-desc {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 24px;
+            line-height: 1.8;
+        }
+
+        .price-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .price-label {
+            font-size: 14px;
+            color: #6c757d;
+            min-width: 60px;
+        }
+
+        .current-price {
+            font-size: 36px;
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .current-price::before {
+            content: '¥';
+            font-size: 24px;
+        }
+
+        .original-price {
+            font-size: 16px;
+            color: #adb5bd;
+            text-decoration: line-through;
+        }
+
+        .original-price::before {
+            content: '¥';
+            font-size: 14px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 20px 0;
+            border-top: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .meta-box {
+            text-align: center;
+            padding: 12px;
+        }
+
+        .meta-box-label {
+            font-size: 12px;
+            color: #adb5bd;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .meta-box-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .stock-normal {
+            color: #28a745;
+        }
+
+        .stock-warning {
+            color: #ffc107;
+        }
+
+        .stock-danger {
+            color: #dc3545;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .detail-tabs {
+            border-top: 1px solid #dee2e6;
+        }
+
+        .tab-header {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            background: #f8f9fa;
+        }
+
+        .tab-item {
+            padding: 16px 32px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab-item.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            background: white;
+        }
+
+        .tab-content {
+            padding: 32px 40px;
+        }
+
+        .detail-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #495057;
+        }
+
+        @media (max-width: 768px) {
+            .detail-main {
+                grid-template-columns: 1fr;
+            }
+
+            .image-section {
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+                padding: 20px;
+            }
+
+            .info-section {
+                padding: 24px;
+            }
+
+            .goods-title {
+                font-size: 22px;
+            }
+
+            .current-price {
+                font-size: 28px;
+            }
+
+            .meta-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .tab-content {
+                padding: 24px 20px;
+            }
+        }
+
+        .comment-section {
+            border-top: 2px solid #e9ecef;
+            padding: 40px;
+            background: white;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f3f5;
+        }
+
+        .comment-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .comment-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-submit {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .comment-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s;
+        }
+
+        .comment-item:hover {
+            background: #f1f3f5;
+            transform: translateX(4px);
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .username {
+            font-weight: 600;
+            color: #212529;
+            font-size: 14px;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #adb5bd;
+        }
+
+        .comment-rating {
+            display: flex;
+            gap: 2px;
+        }
+
+        .star {
+            color: #ffc107;
+            font-size: 16px;
+        }
+
+        .star.empty {
+            color: #dee2e6;
+        }
+
+        .comment-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #495057;
+            margin-top: 10px;
+        }
+
+        /* 商家回复样式 */
+        .admin-reply {
+            margin: 12px 0 0 0;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border-left: 3px solid #28a745;
+            margin-left: 20px;
+        }
+
+        .reply-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(40,167,69,0.15);
+        }
+
+        .reply-icon {
+            font-size: 14px;
+        }
+
+        .reply-label {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 13px;
+        }
+
+        .reply-time {
+            margin-left: auto;
+            color: #999;
+            font-size: 11px;
+        }
+
+        .reply-content {
+            color: #555;
+            font-size: 13px;
+            line-height: 1.5;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .reply-content::before {
+            content: '↳';
+            position: absolute;
+            left: 4px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .empty-comments {
+            text-align: center;
+            padding: 60px 20px;
+            color: #adb5bd;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="back-link">返回列表</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="detail-wrapper">
+        <div class="detail-main">
+            <div class="image-section">
+                <img th:src="${goods.mainImage}"
+                     th:alt="${goods.name}"
+                     class="main-image">
+            </div>
+
+            <div class="info-section">
+                <span th:if="${goods.status == 1}" class="goods-status status-on">在售</span>
+                <span th:if="${goods.status == 0}" class="goods-status status-off">已下架</span>
+                <span th:if="${goods.status == 2}" class="goods-status status-out">缺货</span>
+
+                <h1 class="goods-title" th:text="${goods.name}">商品名称</h1>
+
+                <p class="goods-desc" th:text="${goods.description}">商品描述</p>
+
+                <div class="price-box">
+                    <div class="price-row">
+                        <span class="price-label">售价</span>
+                        <span class="current-price" th:text="${goods.price}">0.00</span>
+                    </div>
+                    <div class="price-row" th:if="${goods.originalPrice != null and goods.originalPrice > goods.price}">
+                        <span class="price-label">原价</span>
+                        <span class="original-price" th:text="${goods.originalPrice}">0.00</span>
+                    </div>
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-box">
+                        <div class="meta-box-label">库存</div>
+                        <div th:class="${goods.stock > 50 ? 'meta-box-value stock-normal' : (goods.stock > 10 ? 'meta-box-value stock-warning' : 'meta-box-value stock-danger')}"
+                             th:text="${goods.stock}">0</div>
+                    </div>
+                    <div class="meta-box">
+                        <div class="meta-box-label">销量</div>
+                        <div class="meta-box-value" th:text="${goods.salesCount}">0</div>
+                    </div>
+                    <div class="meta-box">
+                        <div class="meta-box-label">分类ID</div>
+                        <div class="meta-box-value" th:text="${goods.categoryId}">0</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="buyNow()">立即购买</button>
+                    <button class="btn btn-secondary" onclick="addToCart()">加入购物车</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-tabs">
+            <div class="tab-header">
+                <div class="tab-item active">商品详情</div>
+            </div>
+            <div class="tab-content">
+                <div class="detail-text" th:text="${goods.description}">
+                    商品详细描述内容...
+                </div>
+            </div>
+        </div>
+
+        <div class="comment-section">
+            <div class="comment-header">
+                <div class="comment-title">
+                    <span>💬</span>
+                    <span>用户评论</span>
+                </div>
+                <span class="comment-count" th:text="${commentCount != null ? commentCount : 0} + ' 条评论'">0 条评论</span>
+            </div>
+
+            <div class="comment-form">
+                <form th:action="@{/goods/{id}/comment(id=${goods.id})}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <div class="form-row">
+                        <input type="text"
+                               name="username"
+                               class="form-input"
+                               placeholder="请输入您的昵称"
+                               required>
+                        <select name="rating" class="form-input">
+                            <option value="5">⭐⭐⭐⭐⭐</option>
+                            <option value="4">⭐⭐⭐⭐</option>
+                            <option value="3">⭐⭐⭐</option>
+                            <option value="2">⭐⭐</option>
+                            <option value="1">⭐</option>
+                        </select>
+                    </div>
+                    <textarea name="content"
+                              class="form-textarea"
+                              placeholder="分享您对这个商品的看法..."
+                              required></textarea>
+                    <button type="submit" class="btn-submit">发表评论</button>
+                </form>
+            </div>
+
+            <div class="comment-list" th:if="${comments != null and !comments.isEmpty()}">
+                <div th:each="comment : ${comments}" class="comment-item">
+                    <div class="comment-meta">
+                        <div class="comment-user">
+                            <div class="user-avatar" th:text="${comment.username != null and comment.username.length() > 0 ? #strings.substring(comment.username, 0, 1) : '用'}">用</div>
+                            <div class="user-info">
+                                <div class="username" th:text="${comment.username != null and comment.username.length() > 0 ? comment.username : '匿名用户'}">用户名</div>
+                                <div class="comment-time" th:text="${comment.createdAt != null ? #temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">时间</div>
+                            </div>
+                        </div>
+                        <div class="comment-rating">
+                            <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                <span th:class="${i <= (comment.rating != null ? comment.rating : 5) ? 'star' : 'star empty'}">★</span>
+                            </th:block>
+                        </div>
+                    </div>
+                    <div class="comment-content" th:text="${comment.content}">
+                        评论内容...
+                    </div>
+
+                    <!-- 管理员回复（如果存在）-->
+                    <div class="admin-reply" th:if="${comment.reply != null and comment.reply != ''}">
+                        <div class="reply-header">
+                            <span class="reply-icon">💬</span>
+                            <span class="reply-label">商家回复</span>
+                            <span class="reply-time" th:if="${comment.replyTime != null}"
+                                  th:text="${#temporals.format(comment.replyTime, 'yyyy-MM-dd HH:mm')}">
+                                回复时间
+                            </span>
+                        </div>
+                        <div class="reply-content" th:text="${comment.reply}">
+                            回复内容...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-comments" th:if="${comments == null or comments.isEmpty()}">
+                <div class="empty-icon">💭</div>
+                <div class="empty-text">暂无评论，快来发表第一条评论吧！</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script th:inline="javascript">
+        const goodsId = /*[[${goods.id}]]*/ null;
+
+        // 获取CSRF Token（优先从meta标签，其次从cookie）
+        function getCsrfToken() {
+            const metaToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            if (metaToken) return metaToken;
+            const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        function addToCart() {
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: 'goodsId=' + goodsId + '&quantity=1'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ 已添加到购物车');
+                    updateCartCount();
+                } else {
+                    alert('❌ ' + (data.message || '操作失败'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('网络错误，请重试');
+            });
+        }
+
+        function buyNow() {
+            console.log('🛒 [立即购买] 开始添加商品到购物车... goodsId:', goodsId);
+
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: 'goodsId=' + goodsId + '&quantity=1'
+            })
+            .then(response => {
+                console.log('📦 [立即购买] 添加购物车响应:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ [立即购买] 响应数据:', data);
+
+                if (data.success) {
+                    // 使用返回的cartId，如果没有则使用data.id或默认值
+                    const cartId = data.cartId || data.id || goodsId;
+                    console.log('💳 [立即购买] 跳转到订单页, cartId:', cartId);
+
+                    window.location.href = '/order/create?cartIds=' + cartId;
+                } else {
+                    alert('❌ ' + (data.message || '操作失败'));
+                }
+            })
+            .catch(error => {
+                console.error('❌ [立即购买] 错误:', error);
+                alert('网络错误，请重试');
+            });
+        }
+
+        function updateCartCount() {
+            fetch('/cart/count', {
+                headers: {'X-XSRF-TOKEN': getCsrfToken()}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.count > 0) {
+                    // 可以在这里更新导航栏的购物车数量显示
+                    console.log('购物车数量：' + data.count);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
