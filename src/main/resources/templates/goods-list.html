@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品列表</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            position: relative;
+        }
+
+        .user-info-section {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 24px;  /* 增加内边距 */
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            z-index: 10;  /* 确保在最上层 */
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 16px;
+            border: 2px solid white;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            color: white;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .user-role {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .login-prompt {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-login {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .admin-links {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-admin {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-admin:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+            padding-right: 200px;  /* 为右侧用户信息卡片留出空间 */
+        }
+
+        .btn-publish {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-publish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+
+        .btn-publish::before {
+            content: '+';
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        .btn-cart {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(135deg, #218838 0%, #1aa87a 100%);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f3f5;
+        }
+
+        .filter-icon {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .filter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto auto;
+            gap: 16px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .filter-label::before {
+            content: '';
+            width: 3px;
+            height: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .filter-input:hover {
+            border-color: #dee2e6;
+            background: white;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .btn-filter {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-filter:active {
+            transform: translateY(0);
+        }
+
+        .btn-reset {
+            padding: 10px 24px;
+            background: white;
+            color: #495057;
+            border: 1.5px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 42px;
+        }
+
+        .btn-reset:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+            transform: translateY(-1px);
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f1f3f5;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .filter-tag-label {
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .filter-form {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filter-group:first-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-section {
+                padding: 20px;
+            }
+
+            .filter-form {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-group:first-child {
+                grid-column: auto;
+            }
+
+            .btn-filter,
+            .btn-reset {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .goods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 32px;
+            padding: 20px 0;
+        }
+
+        .goods-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .goods-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            border-color: #adb5bd;
+        }
+
+        .goods-image-wrapper {
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+
+        .goods-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-download-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .goods-card:hover .image-download-btn {
+            opacity: 1;
+        }
+
+        .image-download-btn:hover {
+            background: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .status-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .status-on {
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-off {
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .status-out {
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+
+        .goods-info {
+            padding: 20px;
+        }
+
+        .goods-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            height: 44px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .goods-description {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            height: 39px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .goods-price {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 10px 0;
+            border-top: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .price-current {
+            font-size: 24px;
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .price-current::before {
+            content: '¥';
+            font-size: 16px;
+            margin-right: 2px;
+        }
+
+        .price-original {
+            font-size: 13px;
+            color: #adb5bd;
+            text-decoration: line-through;
+        }
+
+        .price-original::before {
+            content: '¥';
+            font-size: 12px;
+        }
+
+        .goods-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            color: #adb5bd;
+        }
+
+        .meta-value {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .stock-high {
+            color: #28a745;
+        }
+
+        .stock-medium {
+            color: #ffc107;
+        }
+
+        .stock-low {
+            color: #dc3545;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        .pagination-wrapper {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .page-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            color: #495057;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .page-item:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .page-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .page-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .page-info {
+            margin: 0 16px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .page-info strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .batch-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .batch-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .checkbox-all {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #495057;
+            cursor: pointer;
+            user-select: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .checkbox-all:hover {
+            background: #f8f9fa;
+        }
+
+        .checkbox-all input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .selected-count {
+            font-size: 14px;
+            color: #6c757d;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .selected-count strong {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .batch-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-batch-delete {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-batch-delete:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-batch-delete:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-batch-delete:disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-batch-download:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-batch-download:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-batch-download:disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .goods-card {
+            position: relative;
+        }
+
+        .card-checkbox {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 2px solid #f1f3f5;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-edit:active {
+            transform: translateY(0);
+        }
+
+        .btn-delete {
+            background: white;
+            color: #dc3545;
+            border: 1.5px solid #dc3545;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-delete:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .page-header h1 {
+                font-size: 26px;
+            }
+
+            .goods-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 16px;
+            }
+
+            .goods-image-wrapper {
+                height: 180px;
+            }
+        }
+
+        /* ==================== 卖家操作按钮样式 ==================== */
+        .btn-action {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-edit-seller {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-edit-seller:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-delete-seller {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .btn-delete-seller:hover {
+            background: linear-gradient(135deg, #ee5a52 0%, #dc3545 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(238, 90, 82, 0.4);
+        }
+
+        .btn-ship {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-ship:hover {
+            background: linear-gradient(135deg, #218838 0%, #1aa87a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6c757d;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #f8f9fa;
+            color: #dc3545;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px 24px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-cancel {
+            padding: 10px 24px;
+            background: white;
+            color: #6c757d;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .btn-confirm {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-publish-submit {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        }
+
+        .btn-publish-submit:hover {
+            background: linear-gradient(135deg, #218838 0%, #1aa87a 100%) !important;
+        }
+
+        .btn-ship-submit {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        }
+
+        .btn-ship-submit:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>商品列表</h1>
+            <p>共 <span th:text="${goods != null ? (page != null ? page.total : goods.size()) : 0}">0</span> 件商品</p>
+
+            <div class="header-actions">
+                <a href="/articles" class="btn-back"
+                   style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);"
+                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(108, 117, 125, 0.3)'"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(108, 117, 125, 0.2)'">
+                    ← 返回笔记
+                </a>
+                <a href="/goods/publish" class="btn-publish"
+                   sec:authorize="hasAnyRole('ADMIN', 'EDITOR')"
+                   th:if="${userRole == null or userRole != 'SELLER'}">
+                    发布商品
+                </a>
+                <!-- 卖家不显示发布按钮（卖家应该去卖家后台操作） -->
+                <a href="/cart" class="btn-cart"
+                   sec:authorize="isAuthenticated()"
+                   th:if="${userRole == null or userRole != 'SELLER'}">
+                    <span>🛒</span>
+                    <span>购物车</span>
+                </a>
+                <!-- 卖家显示"进入卖家后台"按钮 -->
+                <a href="/seller/dashboard" class="btn-publish"
+                   th:if="${userRole == 'SELLER'}"
+                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    🏪 进入卖家后台
+                </a>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="user-info-section">
+                <div class="user-avatar" th:text="${#strings.toUpperCase(#authentication.name.substring(0,1))}">U</div>
+                <div class="user-details">
+                    <span class="user-name" th:text="${#authentication.name}">用户名</span>
+                    <span class="user-role">
+                        <span sec:authorize="hasRole('ADMIN')">管理员</span>
+                        <span sec:authorize="hasRole('EDITOR')">编辑员</span>
+                        <span sec:authorize="hasRole('USER')">用户</span>
+                    </span>
+                    <div class="admin-links" sec:authorize="hasAnyRole('ADMIN', 'EDITOR')">
+                        <a href="/admin/dashboard" class="btn-admin" sec:authorize="hasRole('ADMIN')">
+                            <span>⚙️</span>
+                            <span>管理后台</span>
+                        </a>
+                        <a href="/admin/users" class="btn-admin" sec:authorize="hasRole('ADMIN')">
+                            <span>👥</span>
+                            <span>用户管理</span>
+                        </a>
+                    </div>
+                    <div class="admin-links" sec:authorize="hasRole('USER')">
+                        <a href="/order" class="btn-admin">
+                            <span>📦</span>
+                            <span>我的订单</span>
+                        </a>
+                    </div>
+                </div>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-logout">
+                        <span>🚪</span>
+                        <span>退出</span>
+                    </button>
+                </form>
+            </div>
+
+            <div sec:authorize="!isAuthenticated()" class="login-prompt">
+                <a href="/toLoginPage" class="btn-login">
+                    <span>🔐</span>
+                    <span>请登录</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-header">
+                <span class="filter-icon">🔍</span>
+                <span class="filter-title">筛选条件</span>
+            </div>
+            <form method="get" action="/" class="filter-form">
+                <div class="filter-group">
+                    <label class="filter-label">关键词搜索</label>
+                    <input type="text"
+                           name="keyword"
+                           class="filter-input"
+                           th:value="${keyword}"
+                           placeholder="输入商品名称或描述...">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">开始日期</label>
+                    <input type="date"
+                           name="startDate"
+                           class="filter-input"
+                           th:value="${startDate}">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">结束日期</label>
+                    <input type="date"
+                           name="endDate"
+                           class="filter-input"
+                           th:value="${endDate}">
+                </div>
+
+                <button type="submit" class="btn-filter">
+                    <span>🔎</span>
+                    <span>搜索</span>
+                </button>
+                <a href="/" class="btn-reset">
+                    <span>↺</span>
+                    <span>重置</span>
+                </a>
+            </form>
+
+            <div th:if="${keyword != null or startDate != null or endDate != null}" class="filter-tags">
+                <div th:if="${keyword != null and keyword != ''}" class="filter-tag">
+                    <span class="filter-tag-label">关键词:</span>
+                    <span th:text="${keyword}"></span>
+                </div>
+                <div th:if="${startDate != null and startDate != ''}" class="filter-tag">
+                    <span class="filter-tag-label">起始:</span>
+                    <span th:text="${startDate}"></span>
+                </div>
+                <div th:if="${endDate != null and endDate != ''}" class="filter-tag">
+                    <span class="filter-tag-label">截止:</span>
+                    <span th:text="${endDate}"></span>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${goods != null and not #lists.isEmpty(goods)}">
+            <div class="batch-actions" th:if="${canEditGoods != null and canEditGoods}">
+                <div class="batch-left">
+                    <label class="checkbox-all">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <span>全选</span>
+                    </label>
+                    <span class="selected-count">已选择 <strong id="selectedCount">0</strong> 项</span>
+                </div>
+                <div class="batch-right">
+                    <button type="button" class="btn-batch-delete" id="batchDeleteBtn" onclick="batchDelete()" disabled>
+                        <span>🗑️</span>
+                        <span>批量删除</span>
+                    </button>
+                    <button type="button" class="btn-batch-download" id="batchDownloadBtn" onclick="batchDownloadImages()" disabled style="padding: 10px 20px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);">
+                        <span>️</span>
+                        <span>下载</span>
+                    </button>
+                </div>
+            </div>
+            <form id="batchDeleteForm" method="post" action="/goods/batch-delete" style="display: none;">
+            </form>
+
+            <div class="goods-grid">
+                <div th:each="item : ${goods}" class="goods-card">
+                    <input type="checkbox" class="card-checkbox" th:value="${item.id}" onchange="updateSelectedCount()" th:if="${canEditGoods != null and canEditGoods}">
+
+                    <a th:href="@{/goods/{id}(id=${item.id})}" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="goods-image-wrapper">
+                            <img th:src="${item.mainImage != null and item.mainImage != '' ? item.mainImage : ''}"
+                                 th:alt="${item.name != null ? item.name : '商品图片'}"
+                                 class="goods-image"
+                                 onerror="console.log('图片加载失败:', this.src); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E暂无图片%3C/text%3E%3C/svg%3E'">
+                            <button type="button"
+                                    class="image-download-btn"
+                                    th:data-image="${item.mainImage}"
+                                    th:data-name="${item.name}"
+                                    onclick="downloadImage(this.getAttribute('data-image'), this.getAttribute('data-name'))"
+                                    title="下载图片"
+                                    th:if="${canEditGoods != null and canEditGoods}">
+                                ⬇️
+                            </button>
+                        </div>
+
+                        <div class="goods-info">
+                            <div class="goods-name" th:text="${item.name != null ? item.name : '未命名商品'}">商品名称</div>
+
+                            <div class="goods-description" th:text="${item.description != null ? item.description : '暂无描述'}">商品描述</div>
+
+                            <div class="goods-price">
+                                <span class="price-current" th:text="${item.price != null ? item.price : 0}">0.00</span>
+                                <span th:if="${item.originalPrice != null and item.originalPrice > item.price}"
+                                      class="price-original"
+                                      th:text="${item.originalPrice}">0.00</span>
+                            </div>
+
+                            <div class="goods-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">库存</span>
+                                    <span th:class="${item.stock != null ? (item.stock > 50 ? 'meta-value stock-high' : (item.stock > 10 ? 'meta-value stock-medium' : 'meta-value stock-low')) : 'meta-value'}"
+                                          th:text="${item.stock != null ? item.stock : 0}">0</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">销量</span>
+                                    <span class="meta-value" th:text="${item.salesCount != null ? item.salesCount : 0}">0</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">分类</span>
+                                    <span class="meta-value" th:text="'未分类'">未分类</span>
+                                </div>
+                            </div>
+
+                            <div class="goods-meta" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e9ecef;">
+                                <div class="meta-item">
+                                    <span class="meta-label">卖家ID</span>
+                                    <span class="meta-value" style="color: #495057; font-weight: 500;" th:text="${item.sellerId != null ? item.sellerId : '未知'}">卖家</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">状态</span>
+                                    <span class="meta-value" style="color: #495057; font-weight: 500;"
+                                          th:text="${item.status == 1 ? '已上架' : (item.status == 2 ? '缺货' : '未知')}">状态</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="card-actions" th:if="${canEditGoods != null and canEditGoods}">
+                        <!-- 卖家专属操作 -->
+                        <div th:if="${userRole == 'SELLER'}" class="seller-actions" style="display: flex; gap: 6px; width: 100%; flex-wrap: wrap;">
+                            <button type="button"
+                                    class="btn-action btn-edit-seller"
+                                    th:data-id="${item.id}"
+                                    onclick="openSellerEditModal(this.getAttribute('data-id'))"
+                                    title="编辑商品信息">
+                                ✏️ 编辑
+                            </button>
+                            <button type="button"
+                                    class="btn-action btn-delete-seller"
+                                    th:data-id="${item.id}"
+                                    th:data-name="${item.name != null ? item.name : '未命名商品'}"
+                                    onclick="sellerDeleteGoods(this.getAttribute('data-id'), this.getAttribute('data-name'))"
+                                    title="删除此商品">
+                                🗑️ 删除
+                            </button>
+                            <button type="button"
+                                    class="btn-action btn-ship"
+                                    th:if="${item.salesCount != null and item.salesCount > 0}"
+                                    th:data-id="${item.id}"
+                                    th:data-name="${item.name != null ? item.name : ''}"
+                                    onclick="openShipModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
+                                    title="管理订单发货">
+                                🚚 发货
+                            </button>
+                        </div>
+
+                        <!-- 管理员/其他角色操作（保持原有逻辑） -->
+                        <a th:if="${userRole != 'SELLER'}" th:href="@{/goods/edit/{id}(id=${item.id})}" class="btn-edit">
+                            <span>✏️</span>
+                            <span>编辑</span>
+                        </a>
+                        <form th:if="${userRole != 'SELLER'}" th:action="@{/goods/delete/{id}(id=${item.id})}" method="post" style="flex: 1;" onsubmit="return confirm('确定要删除这个商品吗？');">
+                            <button type="submit" class="btn-delete" style="width: 100%;">
+                                <span>🗑️</span>
+                                <span>删除</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 卖家专属弹窗：发布商品 ==================== -->
+        <div id="sellerPublishModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>📦 发布新商品</h3>
+                    <button type="button" class="modal-close" onclick="closeSellerPublishModal()">✕</button>
+                </div>
+                <form id="sellerPublishForm" enctype="multipart/form-data" onsubmit="submitSellerPublish(event)">
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label for="publish-name">商品名称 *</label>
+                                <input type="text" id="publish-name" name="name" required placeholder="请输入商品名称（最多100字）" maxlength="100">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="publish-description">商品描述 *</label>
+                                <textarea id="publish-description" name="description" required rows="4" placeholder="请详细描述商品的特点、规格、使用方法等"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="publish-price">销售价格 * (¥)</label>
+                                <input type="number" id="publish-price" name="price" required min="0.01" step="0.01" placeholder="0.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="publish-originalPrice">原价 (¥)</label>
+                                <input type="number" id="publish-originalPrice" name="originalPrice" min="0" step="0.01" placeholder="0.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="publish-stock">库存数量 *</label>
+                                <input type="number" id="publish-stock" name="stock" required min="0" placeholder="0">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="publish-categoryId">商品分类</label>
+                                <select id="publish-categoryId" name="categoryId">
+                                    <option value="">未分类</option>
+                                    <!-- 分类选项由后端动态填充 -->
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="publish-imageFile">商品封面图</label>
+                                <input type="file" id="publish-imageFile" name="imageFile" accept="image/*" onchange="previewImage(this, 'publish-image-preview')">
+                                <div id="publish-image-preview" class="image-preview-container" style="margin-top: 10px; display: none;">
+                                    <img src="" alt="预览图片" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e9ecef;">
+                                    <button type="button" onclick="removeImagePreview('publish-imageFile', 'publish-image-preview')" style="margin-top: 5px; padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">移除图片</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="publish-status">上架状态</label>
+                                <select id="publish-status" name="status">
+                                    <option value="1">立即上架</option>
+                                    <option value="0">暂不上架（保存为草稿）</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeSellerPublishModal()">取消</button>
+                        <button type="submit" class="btn-confirm btn-publish-submit">📦 立即发布</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== 卖家专属弹窗：编辑商品 ==================== -->
+        <div id="sellerEditModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>✏️ 编辑商品信息</h3>
+                    <button type="button" class="modal-close" onclick="closeSellerEditModal()">✕</button>
+                </div>
+                <form id="sellerEditForm" enctype="multipart/form-data" onsubmit="submitSellerEdit(event)">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-id" name="id">
+
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label for="edit-name">商品名称 *</label>
+                                <input type="text" id="edit-name" name="name" required placeholder="请输入商品名称" maxlength="100">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="edit-description">商品描述 *</label>
+                                <textarea id="edit-description" name="description" required rows="4" placeholder="请详细描述商品的特点、规格等"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit-price">销售价格 * (¥)</label>
+                                <input type="number" id="edit-price" name="price" required min="0.01" step="0.01" placeholder="0.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit-originalPrice">原价 (¥)</label>
+                                <input type="number" id="edit-originalPrice" name="originalPrice" min="0" step="0.01" placeholder="0.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit-stock">库存数量 *</label>
+                                <input type="number" id="edit-stock" name="stock" required min="0" placeholder="0">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit-status">商品状态</label>
+                                <select id="edit-status" name="status">
+                                    <option value="1">已上架</option>
+                                    <option value="2">缺货</option>
+                                    <option value="0">下架</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>当前封面图</label>
+                                <div id="edit-current-image" style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
+                                    <img src="" alt="当前图片" style="max-width: 150px; max-height: 150px; border-radius: 6px;">
+                                </div>
+                                <label for="edit-imageFile">更换新图片</label>
+                                <input type="file" id="edit-imageFile" name="imageFile" accept="image/*" onchange="previewImage(this, 'edit-image-preview')">
+                                <div id="edit-image-preview" class="image-preview-container" style="margin-top: 10px; display: none;">
+                                    <img src="" alt="预览图片" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e9ecef;">
+                                    <button type="button" onclick="removeImagePreview('edit-imageFile', 'edit-image-preview')" style="margin-top: 5px; padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">移除新图片</button>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <label>
+                                        <input type="checkbox" id="edit-removeImage" name="removeImage" value="true">
+                                        删除当前封面图
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeSellerEditModal()">取消</button>
+                        <button type="submit" class="btn-confirm">💾 保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== 卖家专属弹窗：发货管理 ==================== -->
+        <div id="shipModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>🚚 订单发货</h3>
+                    <button type="button" class="modal-close" onclick="closeShipModal()">✕</button>
+                </div>
+                <form id="shipForm" onsubmit="submitShipOrder(event)">
+                    <div class="modal-body">
+                        <input type="hidden" id="ship-orderId" name="orderId">
+
+                        <div class="form-group">
+                            <label>商品名称</label>
+                            <div id="ship-goodsName" style="font-weight: 600; color: #495057; padding: 8px 12px; background: #f8f9fa; border-radius: 6px;"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ship-trackingNumber">物流单号</label>
+                            <input type="text" id="ship-trackingNumber" name="trackingNumber" placeholder="请输入物流追踪单号（选填）">
+                            <small style="color: #6c757d; display: block; margin-top: 4px;">如：顺丰速运 SF1234567890</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ship-shippingCompany">物流公司</label>
+                            <select id="ship-shippingCompany" name="shippingCompany">
+                                <option value="">请选择物流公司</option>
+                                <option value="SF Express">顺丰速运</option>
+                                <option value="ZTO Express">中通快递</option>
+                                <option value="YTO Express">圆通速递</option>
+                                <option value="STO Express">申通快递</option>
+                                <option value="Yunda Express">韵达快递</option>
+                                <option value="JD Logistics">京东物流</option>
+                                <option value="EMS">邮政EMS</option>
+                                <option value="Other">其他</option>
+                            </select>
+                        </div>
+
+                        <div class="alert-info" style="background: #d1ecf1; color: #0c5460; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 13px;">
+                            ℹ️ 发货后，买家将收到通知并可实时查看物流状态。请确保物流信息准确无误。
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeShipModal()">取消</button>
+                        <button type="submit" class="btn-confirm btn-ship-submit">🚚 确认发货</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 添加卖家操作按钮的样式 -->
+
+        <div th:if="${page != null and page.pages > 1}" class="pagination-wrapper">
+            <div class="pagination">
+                <a th:href="@{/(pageNum=1, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                   class="page-item"
+                   th:classappend="${page.current == 1} ? 'disabled'">首页</a>
+
+                <a th:href="@{/(pageNum=${page.current - 1}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                   class="page-item"
+                   th:classappend="${page.current == 1} ? 'disabled'">上一页</a>
+
+                <th:block th:if="${page.pages <= 7}">
+                    <th:block th:each="i : ${#numbers.sequence(1, page.pages)}">
+                        <a th:href="@{/(pageNum=${i}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                           class="page-item"
+                           th:classappend="${i == page.current} ? 'active'"
+                           th:text="${i}">1</a>
+                    </th:block>
+                </th:block>
+
+                <th:block th:if="${page.pages > 7}">
+                    <th:block th:if="${page.current <= 4}">
+                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                            <a th:href="@{/(pageNum=${i}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                               class="page-item"
+                               th:classappend="${i == page.current} ? 'active'"
+                               th:text="${i}">1</a>
+                        </th:block>
+                        <span class="page-item disabled">...</span>
+                        <a th:href="@{/(pageNum=${page.pages}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                           class="page-item"
+                           th:text="${page.pages}">末页</a>
+                    </th:block>
+
+                    <th:block th:if="${page.current > 4 and page.current < page.pages - 3}">
+                        <a th:href="@{/(pageNum=1, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                           class="page-item"
+                           th:text="1">1</a>
+                        <span class="page-item disabled">...</span>
+                        <th:block th:each="i : ${#numbers.sequence(page.current - 1, page.current + 1)}">
+                            <a th:href="@{/(pageNum=${i}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                               class="page-item"
+                               th:classappend="${i == page.current} ? 'active'"
+                               th:text="${i}">1</a>
+                        </th:block>
+                        <span class="page-item disabled">...</span>
+                        <a th:href="@{/(pageNum=${page.pages}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                           class="page-item"
+                           th:text="${page.pages}">末页</a>
+                    </th:block>
+
+                    <th:block th:if="${page.current >= page.pages - 3}">
+                        <a th:href="@{/(pageNum=1, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                           class="page-item"
+                           th:text="1">1</a>
+                        <span class="page-item disabled">...</span>
+                        <th:block th:each="i : ${#numbers.sequence(page.pages - 4, page.pages)}">
+                            <a th:href="@{/(pageNum=${i}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                               class="page-item"
+                               th:classappend="${i == page.current} ? 'active'"
+                               th:text="${i}">1</a>
+                        </th:block>
+                    </th:block>
+                </th:block>
+
+                <a th:href="@{/(pageNum=${page.current + 1}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                   class="page-item"
+                   th:classappend="${page.current == page.pages} ? 'disabled'">下一页</a>
+
+                <a th:href="@{/(pageNum=${page.pages}, pageSize=${pageSize}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
+                   class="page-item"
+                   th:classappend="${page.current == page.pages} ? 'disabled'">末页</a>
+
+                <span class="page-info">
+                    第 <strong th:text="${page.current}">1</strong> / <strong th:text="${page.pages}">1</strong> 页，
+                    共 <strong th:text="${page.total}">0</strong> 条
+                </span>
+            </div>
+        </div>
+
+        <div th:if="${goods == null or goods.isEmpty()}" class="empty-state">
+            <div class="empty-icon">📦</div>
+            <h2>暂无商品</h2>
+            <p>敬请期待更多商品上架</p>
+        </div>
+    </div>
+    <script>
+        function downloadImage(imagePath, productName) {
+            if (!imagePath || imagePath === 'null' || imagePath === '') {
+                alert('该商品没有封面图');
+                return;
+            }
+
+            // 提取纯文件名（去掉 /img/ 等路径前缀）
+            let fileName = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+
+            // 如果文件名包含下划线和 _thumb，说明是缩略图，需要获取原图
+            if (fileName.includes('_thumb')) {
+                fileName = fileName.replace('_thumb', '');
+            }
+
+            let downloadUrl = '/goods/download-image/' + fileName;
+
+            console.log('下载图片:', {
+                '原始路径': imagePath,
+                '文件名': fileName,
+                '下载URL': downloadUrl
+            });
+
+            let link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = (productName || '商品') + '_' + fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function batchDownloadImages() {
+            const checkboxes = document.querySelectorAll('.card-checkbox:checked');
+
+            if (checkboxes.length === 0) {
+                alert('请先选择要下载图片的商品');
+                return;
+            }
+
+            let downloadCount = 0;
+            let skipCount = 0;
+
+            checkboxes.forEach((checkbox, index) => {
+                const goodsId = checkbox.value;
+                const card = checkbox.closest('.goods-card');
+                const downloadBtn = card.querySelector('.image-download-btn');
+
+                if (downloadBtn) {
+                    const imagePath = downloadBtn.getAttribute('data-image');
+                    const productName = downloadBtn.getAttribute('data-name');
+
+                    if (imagePath && imagePath !== 'null' && imagePath !== '') {
+                        setTimeout(() => {
+                            downloadImage(imagePath, productName);
+                        }, index * 300);
+                        downloadCount++;
+                    } else {
+                        skipCount++;
+                    }
+                }
+            });
+
+            if (downloadCount > 0) {
+                const message = skipCount > 0
+                    ? `开始下载 ${downloadCount} 张图片（跳过 ${skipCount} 个无图片商品）`
+                    : `开始下载 ${downloadCount} 张图片`;
+                alert(message);
+            } else {
+                alert('选中的商品都没有封面图');
+            }
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.card-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.card-checkbox:checked');
+            const count = checkboxes.length;
+            const countElement = document.getElementById('selectedCount');
+            const batchBtn = document.getElementById('batchDeleteBtn');
+            const downloadBtn = document.getElementById('batchDownloadBtn');
+
+            if (countElement) {
+                countElement.textContent = count;
+            }
+
+            if (batchBtn) {
+                batchBtn.disabled = count === 0;
+            }
+
+            if (downloadBtn) {
+                downloadBtn.disabled = count === 0;
+            }
+        }
+
+        function batchDelete() {
+            const checkboxes = document.querySelectorAll('.card-checkbox:checked');
+
+            if (checkboxes.length === 0) {
+                alert('请先选择要删除的商品');
+                return;
+            }
+
+            if (!confirm('确定要删除选中的 ' + checkboxes.length + ' 个商品吗？此操作不可恢复！')) {
+                return;
+            }
+
+            const form = document.getElementById('batchDeleteForm');
+            if (!form) {
+                alert('表单错误，请刷新页面重试');
+                return;
+            }
+
+            form.innerHTML = '';
+
+            checkboxes.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+
+            const csrfToken = getCookie('XSRF-TOKEN');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            }
+
+            form.submit();
+        }
+
+        function getCookie(name) {
+            const value = '; ' + document.cookie;
+            const parts = value.split('; ' + name + '=');
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+            return null;
+        }
+
+        // ==================== 卖家专属功能 ====================
+
+        // 打开发布商品弹窗
+        function openSellerPublishModal() {
+            document.getElementById('sellerPublishModal').style.display = 'flex';
+            document.getElementById('sellerPublishForm').reset();
+            document.getElementById('publish-image-preview').style.display = 'none';
+        }
+
+        // 关闭发布商品弹窗
+        function closeSellerPublishModal() {
+            document.getElementById('sellerPublishModal').style.display = 'none';
+        }
+
+        // 提交发布商品表单
+        function submitSellerPublish(event) {
+            event.preventDefault();
+
+            var form = document.getElementById('sellerPublishForm');
+            var formData = new FormData(form);
+
+            // 显示加载状态
+            var submitBtn = form.querySelector('.btn-publish-submit');
+            var originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ 发布中...';
+            submitBtn.disabled = true;
+
+            fetch('/seller/goods/publish', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeSellerPublishModal();
+                    location.reload(); // 刷新页面显示新商品
+                } else {
+                    alert('❌ ' + data.message);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 发布失败：' + error.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        // 打开编辑商品弹窗（先加载商品数据）
+        function openSellerEditModal(goodsId) {
+            // 从服务器获取商品详情
+            fetch('/goods/' + goodsId)
+            .then(function(response) { return response.text(); })
+            .then(function(html) {
+                // 解析HTML提取商品信息（简单实现：通过API获取JSON更好）
+                fetch('/api/goods/' + goodsId)
+                .then(function(resp) { return resp.json(); })
+                .then(function(goods) {
+                    // 填充表单
+                    document.getElementById('edit-id').value = goods.id;
+                    document.getElementById('edit-name').value = goods.name || '';
+                    document.getElementById('edit-description').value = goods.description || '';
+                    document.getElementById('edit-price').value = goods.price || 0;
+                    document.getElementById('edit-originalPrice').value = goods.originalPrice || 0;
+                    document.getElementById('edit-stock').value = goods.stock || 0;
+                    document.getElementById('edit-status').value = goods.status || 1;
+
+                    // 显示当前封面图
+                    var currentImageDiv = document.getElementById('edit-current-image');
+                    if (goods.mainImage && goods.mainImage !== '') {
+                        currentImageDiv.querySelector('img').src = goods.mainImage;
+                        currentImageDiv.style.display = 'block';
+                    } else {
+                        currentImageDiv.style.display = 'none';
+                    }
+
+                    // 重置图片预览
+                    document.getElementById('edit-image-preview').style.display = 'none';
+
+                    // 显示弹窗
+                    document.getElementById('sellerEditModal').style.display = 'flex';
+                })
+                .catch(function() {
+                    // 如果API不存在，使用简化版：只显示ID，让用户手动填写
+                    document.getElementById('edit-id').value = goodsId;
+                    document.getElementById('sellerEditModal').style.display = 'flex';
+                });
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                // 兜底方案：直接显示弹窗
+                document.getElementById('edit-id').value = goodsId;
+                document.getElementById('sellerEditModal').style.display = 'flex';
+            });
+        }
+
+        // 关闭编辑商品弹窗
+        function closeSellerEditModal() {
+            document.getElementById('sellerEditModal').style.display = 'none';
+        }
+
+        // 提交编辑商品表单
+        function submitSellerEdit(event) {
+            event.preventDefault();
+
+            var form = document.getElementById('sellerEditForm');
+            var formData = new FormData(form);
+
+            var submitBtn = form.querySelector('.btn-confirm');
+            var originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ 保存中...';
+            submitBtn.disabled = true;
+
+            fetch('/seller/goods/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeSellerEditModal();
+                    location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 更新失败：' + error.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        // 卖家删除商品
+        function sellerDeleteGoods(goodsId, goodsName) {
+            var confirmMessage = '⚠️ 确定要删除该商品吗？\n\n';
+            confirmMessage += '商品名称：' + goodsName + '\n\n';
+            confirmMessage += '此操作将永久删除该商品及其所有数据，且不可恢复！';
+
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            fetch('/seller/goods/delete/' + goodsId, {
+                method: 'POST'
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 删除失败：' + error.message);
+            });
+        }
+
+        // 打开发货弹窗
+        function openShipModal(orderId, goodsName) {
+            document.getElementById('ship-orderId').value = orderId;
+            document.getElementById('ship-goodsName').textContent = goodsName || '未知商品';
+            document.getElementById('ship-trackingNumber').value = '';
+            document.getElementById('ship-shippingCompany').value = '';
+            document.getElementById('shipModal').style.display = 'flex';
+        }
+
+        // 关闭发货弹窗
+        function closeShipModal() {
+            document.getElementById('shipModal').style.display = 'none';
+        }
+
+        // 提交发货表单
+        function submitShipOrder(event) {
+            event.preventDefault();
+
+            var orderId = document.getElementById('ship-orderId').value;
+            var trackingNumber = document.getElementById('ship-trackingNumber').value;
+            var shippingCompany = document.getElementById('ship-shippingCompany').value;
+
+            if (!shippingCompany) {
+                alert('请选择物流公司');
+                return;
+            }
+
+            var submitBtn = document.querySelector('.btn-ship-submit');
+            var originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ 发货中...';
+            submitBtn.disabled = true;
+
+            fetch('/seller/order/ship/' + orderId + '?trackingNumber=' + encodeURIComponent(trackingNumber) + '&shippingCompany=' + encodeURIComponent(shippingCompany), {
+                method: 'POST'
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeShipModal();
+                    // 可选：刷新页面或更新订单状态显示
+                } else {
+                    alert('❌ ' + data.message);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 发货失败：' + error.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        // 图片预览功能
+        function previewImage(input, previewContainerId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var container = document.getElementById(previewContainerId);
+                    container.querySelector('img').src = e.target.result;
+                    container.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 移除图片预览
+        function removeImagePreview(inputId, previewContainerId) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(previewContainerId).style.display = 'none';
+        }
+
+        // 页面加载完成后，为卖家添加"发布商品"按钮
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查当前用户是否为卖家（从Thymeleaf变量获取）
+            var userRole = /*[[${userRole}]]*/ null;
+
+            console.log('当前用户角色:', userRole); // 调试日志
+
+            // 如果Thymeleaf变量获取失败，尝试从页面元素获取
+            if (!userRole) {
+                var userRoleElement = document.querySelector('[data-user-role]');
+                if (userRoleElement) {
+                    userRole = userRoleElement.getAttribute('data-user-role');
+                }
+            }
+
+            // 为卖家动态添加操作提示（可选增强功能）
+            if (userRole === 'SELLER') {
+                console.log('检测到卖家角色，已启用卖家专属功能');
+
+                // 可以在这里添加其他初始化逻辑
+                // 例如：高亮显示卖家的商品，添加统计信息等
+            }
+        });
+
+    </script>
+</body>
+</html>
