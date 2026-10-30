@@ -1,6 +1,6 @@
-# 商品管理系统（goods）
+# 内容电商平台（goods）
 
-基于 **Spring Boot 3 + MyBatis-Plus + Thymeleaf** 的电商 / 商品管理系统，包含**买家前台**、**卖家中心**与**管理后台**三种角色。
+基于 **Spring Boot 3 + MyBatis-Plus + Thymeleaf** 的内容电商平台：以种草笔记 / 文章内容带动商品转化，包含**买家前台**、**卖家中心**与**管理后台**三种角色。
 
 ## 功能概览
 

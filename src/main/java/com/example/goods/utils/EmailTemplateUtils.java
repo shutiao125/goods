@@ -37,7 +37,7 @@ public class EmailTemplateUtils {
                 "</div>" +
                 "<div class='footer'>" +
                 "<p>此邮件由系统自动发送，请勿回复</p>" +
-                "<p>&copy; 2024 商品管理系统</p>" +
+                "<p>&copy; 2024 内容电商平台</p>" +
                 "</div>" +
                 "</div>" +
                 "</body>" +

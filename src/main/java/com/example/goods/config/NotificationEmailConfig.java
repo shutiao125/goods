@@ -15,5 +15,5 @@ public class NotificationEmailConfig {
     
     private List<String> recipients;
     
-    private String fromName = "商品管理系统";
+    private String fromName = "内容电商平台";
 }
