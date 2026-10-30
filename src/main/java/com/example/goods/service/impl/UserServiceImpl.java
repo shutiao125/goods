@@ -32,7 +32,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new UsernameNotFoundException("用户不存在: " + username);
         }
 
-        if (!"active".equals(user.getStatus())) {
+        if (!"active".equalsIgnoreCase(user.getStatus())) {
             throw new UsernameNotFoundException("用户状态异常: " + user.getStatus());
         }
 
